@@ -15,6 +15,11 @@ All notable changes to this library are documented here. It follows [Semantic Ve
 - Every constant, the existing ones too, is frozen, so no code can change one by mistake.
 - The overview's other figures, which only `get()` could read before: `overview.period`, `funnel`, `attention`, `assets`, `topPaymentLinks`, `setup` and `daily`, typed `OverviewPeriod`, `OverviewFunnel` (with `OverviewFunnelAsset`), `OverviewAttention` (with `OverviewChargeAmount` and `OverviewWaitingPayouts`), `OverviewAsset`, `OverviewPaymentLink`, `OverviewSetup` and `OverviewDay`. Amounts stay strings, and days are `Date`s at midnight UTC.
 - What answers carry besides their objects: every `Page` has the `meta` the API sent and the `mode` of the lists that say it, the coins on offer and the activity log; `assets.list()` answers with an `AssetPage`, whose `currencies` are those prices can be asked in; and the overview has its `mode`. `payoutAddresses.list()` and `payouts.summary()` stay plain arrays: their mode is `velirapay.mode()`, and whether an owner lets API keys change payout addresses is `account.apiPayoutAddressChanges`.
+- `charge.paymentLinkTitle` and `charge.invoiceNumber`: the title of the payment link and the number of the invoice a charge in a webhook names. The API's answers only give their codes, so both are null there; `paymentLink` and `invoice` keep giving the codes everywhere.
+
+### Fixed
+
+- The charges events carry are typed `ApiCharge`, since the API always sends their checkout page: `event.charge?.checkoutUrl` is a `string`, where 0.1.1 said events left it out. Only charges in webhooks lack it. Nothing changes at runtime.
 
 ## 0.1.1 - 2026-11-12
 

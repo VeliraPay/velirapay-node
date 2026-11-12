@@ -30,6 +30,9 @@ test('a signed charge delivery is verified and parsed', () => {
     assert.equal(charge.id, 'k3v9x2m7q8wz');
     assert.equal(charge.isPaid(), true);
     assert.equal(charge.paymentLink, 'p4n8r2t6y1ua');
+    assert.equal(charge.paymentLinkTitle, 'Pro plan');
+    assert.equal(charge.invoice, null);
+    assert.equal(charge.invoiceNumber, null);
     assert.equal(charge.assetAmount, '0.002500000000000000');
     assert.equal(charge.transactions[0]?.confirmations, 2);
     assert.equal(charge.transactions[0]?.requiredConfirmations, 2);
@@ -43,6 +46,17 @@ test('a signed charge delivery is verified and parsed', () => {
     // @ts-expect-error A charge in a webhook has no checkout page, so its checkoutUrl stays string | null.
     const checkoutUrl: string = charge.checkoutUrl;
     assert.equal(checkoutUrl, null);
+});
+
+test('a charge that paid an invoice names the invoice', () => {
+    const charge = signed('webhook_invoice_charge').charge;
+
+    assert.ok(charge !== null);
+    assert.equal(charge.invoice, 'w7c2h5j9d3kx');
+    assert.equal(charge.invoiceNumber, 'INV-0042');
+    assert.equal(charge.paymentLink, null);
+    assert.equal(charge.paymentLinkTitle, null);
+    assert.deepEqual(charge.metadata, {});
 });
 
 test('a payment detected delivery carries the transfer that was seen', () => {

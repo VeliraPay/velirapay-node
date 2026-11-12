@@ -29,6 +29,15 @@ test('an event is retrieved with its charge', async () => {
     assert.equal(read.invoice, null);
 });
 
+test('the charge an event carries is typed with its checkout page', async () => {
+    const http = new MockFetch().json({ data: event });
+
+    const read = await client(http).events.retrieve('9b1f7a3e-2c4d-4e8f-a6b0-1d2c3e4f5a6b');
+    const checkoutUrl: string | undefined = read.charge?.checkoutUrl;
+
+    assert.equal(checkoutUrl, 'https://velirapay.com/c/k3v9x2m7q8wz');
+});
+
 test('events are listed with filters', async () => {
     const http = new MockFetch().json(listResponse([event]));
 

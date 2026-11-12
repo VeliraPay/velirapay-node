@@ -24,8 +24,14 @@ export class Charge extends ApiResource {
     /** The code of the payment link the charge was made through. */
     readonly paymentLink: string | null;
 
+    /** The title of that payment link, in webhooks alone; null in the API's answers, which only give its code. */
+    readonly paymentLinkTitle: string | null;
+
     /** The code of the invoice the charge pays. */
     readonly invoice: string | null;
+
+    /** The number of that invoice, such as "INV-0042", in webhooks alone; null in the API's answers, which only give its code. */
+    readonly invoiceNumber: string | null;
 
     /** The merchant's description of the charge. */
     readonly description: string | null;
@@ -126,7 +132,9 @@ export class Charge extends ApiResource {
         this.id = string(attributes, 'id', string(attributes, 'code'));
         this.status = string(attributes, 'status');
         this.paymentLink = reference(attributes, 'payment_link');
+        this.paymentLinkTitle = nullableString(map(attributes, 'payment_link'), 'title');
         this.invoice = reference(attributes, 'invoice');
+        this.invoiceNumber = nullableString(map(attributes, 'invoice'), 'number');
         this.description = nullableString(attributes, 'description');
         this.fiatAmount = string(attributes, 'fiat_amount', '0');
         this.fiatCurrency = string(attributes, 'fiat_currency');
@@ -191,7 +199,7 @@ export class Charge extends ApiResource {
     }
 }
 
-/** A charge as the API answers with it, which always has its checkout page. Charges in webhooks and events stay plain charges, without one. */
+/** A charge as the API answers with it, the charges events carry included, which always has its checkout page. Charges in webhooks stay plain charges, without one. */
 export type ApiCharge = Charge & { readonly checkoutUrl: string };
 
 /** What is known about the customer paying a charge, including the signals that help spot fraud. */

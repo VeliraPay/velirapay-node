@@ -1,6 +1,6 @@
 import type { EventType, OrString } from '../enums.ts';
 import { ApiResource, date, map, object, string, type Attributes } from './api-resource.ts';
-import { Charge } from './charge.ts';
+import { Charge, type ApiCharge } from './charge.ts';
 import { Invoice } from './invoice.ts';
 
 /** Something that happened to a charge or an invoice, as the events API lists it. */
@@ -17,8 +17,8 @@ export class Event extends ApiResource {
     /** When it happened. */
     readonly createdAt: Date | null;
 
-    /** The charge the event is about, as it is now, without its timeline. */
-    readonly charge: Charge | null;
+    /** The charge the event is about, as it is now, with its checkout page but without its timeline. */
+    readonly charge: ApiCharge | null;
 
     /** The invoice the event is about. */
     readonly invoice: Invoice | null;
@@ -30,7 +30,7 @@ export class Event extends ApiResource {
         this.type = string(attributes, 'type');
         this.details = map(attributes, 'details');
         this.createdAt = date(attributes, 'created_at');
-        this.charge = object(attributes, 'charge', (charge) => new Charge(charge));
+        this.charge = object(attributes, 'charge', (charge) => new Charge(charge) as ApiCharge);
         this.invoice = object(attributes, 'invoice', (invoice) => new Invoice(invoice));
     }
 

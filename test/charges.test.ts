@@ -78,7 +78,9 @@ test('a charge is read into typed properties', async () => {
     assert.equal(charge.isPaid(), true);
     assert.equal(charge.isOpen(), false);
     assert.equal(charge.paymentLink, 'p4n8r2t6y1ua');
+    assert.equal(charge.paymentLinkTitle, null);
     assert.equal(charge.invoice, null);
+    assert.equal(charge.invoiceNumber, null);
     assert.equal(charge.description, 'Pro plan, 1 year');
     assert.equal(charge.fiatAmount, '150.00');
     assert.equal(charge.fiatCurrency, 'EUR');
