@@ -63,12 +63,12 @@ const charge = await velirapay.charges.create({
     customer: { email: 'ada@example.com', name: 'Ada Lovelace' },
     metadata: { order_id: '1042' },
     success_url: 'https://example.com/orders/1042',
-}, { idempotencyKey: 'order-1042' });
+}, { idempotencyKey: 'order-1042-attempt-1' });
 
 res.redirect(303, charge.checkoutUrl);
 ```
 
-They pay there, and VeliraPay tells your server about it with a [webhook](#webhooks). The exchange rate is locked when the charge is created, and the customer has 30 minutes to pay.
+They pay there, and VeliraPay tells your server about it with a [webhook](#webhooks). The exchange rate is locked when the charge is created, and the customer has 30 minutes to pay. The idempotency key makes the call safe to retry: use a new one for a new attempt, such as a charge replacing one that expired ([Retries and idempotency](#retries-and-idempotency)).
 
 Parameters are sent as the API names them, in snake_case, and objects come back with camelCase properties: `charge.checkoutUrl`, `charge.assetAmount`, `charge.customer.ipAddress`. Amounts are always strings, such as `'49.90'`, never floating-point numbers, so no precision is lost. A number you pass is rounded to 14 significant digits, as the API reads a JSON number, and sent as a decimal string, since the API refuses an exponent such as `5e-7`: `0.1 + 0.2` goes out as `'0.3'` and `0.00005` as `'0.00005'`. Pass a string to send every digit as it is. A charge the API answers with is an `ApiCharge`, whose `checkoutUrl` is always a string. Charges in webhooks leave it out, so theirs is `string | null`.
 
@@ -795,10 +795,10 @@ Requests that fail with a network error, a rate limit (429) or an outage (502, 5
 
 Each key may make 120 requests a minute, and each network, an IPv4 address or an IPv6 /64, 600.
 
-While retries are on, each write carries an `Idempotency-Key` header, so the API carries out a retried request once. The library makes up a key per call; pass your own, such as an order number, to make a call safe to repeat across processes:
+While retries are on, each write carries an `Idempotency-Key` header, so the API carries out a retried request once. The library makes up a key per call; pass your own to make a call safe to repeat across processes, such as after a crash:
 
 ```js
-const charge = await velirapay.charges.create({ amount: '49.90', currency: 'EUR', asset: 'BTC' }, { idempotencyKey: 'order-1042' });
+const charge = await velirapay.charges.create({ amount: '49.90', currency: 'EUR', asset: 'BTC' }, { idempotencyKey: 'order-1042-attempt-1' });
 
 velirapay.lastResponse()?.wasReplayed(); // true when the API answered from an earlier request
 ```
@@ -806,8 +806,9 @@ velirapay.lastResponse()?.wasReplayed(); // true when the API answered from an e
 What the API does with a key:
 
 - Successful (2xx) answers are replayed for 24 hours to requests repeating the key. A request that failed stores nothing, so repeating it runs it again.
+- Reuse a key only to retry the same request. A new attempt needs a new key: a charge replacing one that expired, under the key of the first, would get the expired charge back for a day. Hence keys such as `order-1042-attempt-1`, not the bare order number.
 - An answer that carries a new API key or webhook signing secret is never stored. Repeating the key of `apiKeys.create()`, `webhookEndpoints.create()` or `rotateSecret()`, as the library's own retry does after a lost answer, throws a `ConflictError` whose `wasReplayed()` is `true`, which means the first request succeeded: see [webhook endpoints](#webhook-endpoints) and [API keys](#api-keys) for how to recover. It is the only conflict that is a replay.
-- Reusing a key with a different body or query string throws a `ConflictError`.
+- Reusing a key with a different body or query string, such as another coin, throws a `ConflictError`.
 - A request holds its key for up to 60 seconds while it is being processed. Another one with the same key gets a 409 with `Retry-After: 1` in that time, which the library waits out and retries.
 - A key covers one account, one mode, one HTTP method and one path, and every API key of that account and mode shares it, so two servers with different API keys still create one charge for one idempotency key. It is at most 255 characters.
 
