@@ -186,6 +186,55 @@ test('no idempotency key is added when retries are off', async () => {
     assert.equal(http.lastRequest().headers.has('Idempotency-Key'), false);
 });
 
+/** An error shaped like the FetchError node-fetch throws, of the "system" type for a connection or a body read that failed. */
+class FetchError extends Error {
+    override readonly name = 'FetchError';
+    readonly type: string;
+    readonly code: string | undefined;
+
+    constructor(message: string, type: string, code?: string) {
+        super(message);
+        this.type = type;
+        this.code = code;
+    }
+}
+
+test("a failure node-fetch reports is retried, then thrown as a ConnectionError", async () => {
+    const sleeps: number[] = [];
+    const failure = new FetchError('request to https://api.velirapay.com/v1/charges/k3v9x2m7q8wz failed, reason: socket hang up', 'system', 'ECONNRESET');
+    const http = new MockFetch().queue(failure, failure, failure);
+
+    await assert.rejects(transport(http, sleeps).request('GET', '/v1/charges/k3v9x2m7q8wz'), (error: unknown) => {
+        assert.ok(error instanceof ConnectionError);
+        assert.equal(error.cause, failure);
+        assert.equal(error.message, 'Could not reach the VeliraPay API: request to https://api.velirapay.com/v1/charges/k3v9x2m7q8wz failed, reason: socket hang up');
+
+        return true;
+    });
+
+    assert.equal(http.requests.length, 3);
+    assert.equal(sleeps.length, 2);
+});
+
+test('a failure carrying a system error code is retried with the same idempotency key', async () => {
+    const http = new MockFetch().queue(Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' })).json({ data: fixture('charge') }, 201);
+
+    const response = await transport(http, []).request('POST', '/v1/charges', {}, { asset: 'BTC' });
+
+    assert.equal(response.status, 201);
+    assert.equal(http.requests.length, 2);
+    assert.equal(http.requests[0]?.headers.get('Idempotency-Key'), http.requests[1]?.headers.get('Idempotency-Key'));
+});
+
+test('an error the fetch throws for another reason passes straight through, after one attempt', async () => {
+    for (const failure of [new Error('Something in the test double broke.'), new FetchError('invalid json response body', 'invalid-json'), Object.assign(new Error('Not allowed.'), { code: 'ERR_NOT_ALLOWED' })]) {
+        const http = new MockFetch().queue(failure);
+
+        await assert.rejects(transport(http, []).request('POST', '/v1/charges', {}, { asset: 'BTC' }), (error: unknown) => error === failure);
+        assert.equal(http.requests.length, 1);
+    }
+});
+
 test('a connection error is not retried when retries are off', async () => {
     const http = new MockFetch().queue(new TypeError('fetch failed'));
 

@@ -20,6 +20,9 @@ export interface TransportOptions {
 /** The statuses worth another attempt for any request. */
 const RETRYABLE_STATUSES = [429, 502, 503, 504];
 
+/** The codes Node gives a connection that could not be made or was cut off, which a fetch implementation may throw as they are. */
+const NETWORK_ERROR_CODES = ['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EPIPE', 'EAI_AGAIN', 'ENOTFOUND', 'EHOSTUNREACH', 'ENETUNREACH'];
+
 /** Sends requests to the VeliraPay API and turns its answers into responses or errors. */
 export class HttpTransport {
     readonly #options: TransportOptions;
@@ -179,7 +182,20 @@ export class HttpTransport {
 
 /** Whether fetch failed to reach the API, or to read its answer, rather than the code calling it failing. */
 function isNetworkError(error: unknown): boolean {
-    return error instanceof TypeError || (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError'));
+    if (error instanceof TypeError) {
+        return true;
+    }
+
+    if (!(error instanceof Error)) {
+        return false;
+    }
+
+    // node-fetch reports a connection or a body read that failed as a FetchError of the "system" type.
+    if (error.name === 'TimeoutError' || error.name === 'AbortError' || (error.name === 'FetchError' && 'type' in error && error.type === 'system')) {
+        return true;
+    }
+
+    return 'code' in error && typeof error.code === 'string' && NETWORK_ERROR_CODES.includes(error.code);
 }
 
 /** The wait before an attempt, in seconds: half a second, doubling each time, with some jitter. */

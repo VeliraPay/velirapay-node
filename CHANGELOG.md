@@ -20,6 +20,7 @@ All notable changes to this library are documented here. It follows [Semantic Ve
 ### Fixed
 
 - The charges events carry are typed `ApiCharge`, since the API always sends their checkout page: `event.charge?.checkoutUrl` is a `string`, where 0.1.1 said events left it out. Only charges in webhooks lack it. Nothing changes at runtime.
+- A network failure from a `fetch` you pass, such as node-fetch's `FetchError` of the `system` type or an error with a code such as `ECONNRESET`, is retried with the same idempotency key and then thrown as a `ConnectionError` whose `cause` is the original, as the built-in fetch's are. Before, it escaped as it was after one attempt. An error a `fetch` throws for any other reason still passes straight through.
 
 ## 0.1.1 - 2026-11-12
 
