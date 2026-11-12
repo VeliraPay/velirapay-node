@@ -810,7 +810,7 @@ What the API does with a key:
 - An answer that carries a new API key or webhook signing secret is never stored. Repeating the key of `apiKeys.create()`, `webhookEndpoints.create()` or `rotateSecret()`, as the library's own retry does after a lost answer, throws a `ConflictError` whose `wasReplayed()` is `true`, which means the first request succeeded: see [webhook endpoints](#webhook-endpoints) and [API keys](#api-keys) for how to recover. It is the only conflict that is a replay.
 - Reusing a key with a different body or query string, such as another coin, throws a `ConflictError`.
 - A request holds its key for up to 60 seconds while it is being processed. Another one with the same key gets a 409 with `Retry-After: 1` in that time, which the library waits out and retries.
-- A key covers one account, one mode, one HTTP method and one path, and every API key of that account and mode shares it, so two servers with different API keys still create one charge for one idempotency key. It is at most 255 characters.
+- A key covers one account, one mode, one HTTP method and one path, and every API key of that account and mode shares it, so two servers with different API keys still create one charge for one idempotency key. It is at most 255 characters, and cannot be blank.
 
 ## Constants
 

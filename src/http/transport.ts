@@ -38,6 +38,10 @@ export class HttpTransport {
     async request(method: string, path: string, query: object = {}, body?: object, idempotencyKey?: string): Promise<ApiResponse> {
         method = method.toUpperCase();
 
+        if (typeof idempotencyKey === 'string' && idempotencyKey.trim() === '') {
+            throw new InvalidArgumentError('An idempotency key cannot be blank: give one such as order-1042-attempt-1, or leave it out.');
+        }
+
         // A retried write must not be carried out twice, so every attempt carries the same key.
         if (method !== 'GET' && idempotencyKey === undefined && this.#options.maxRetries > 0) {
             idempotencyKey = randomUUID();

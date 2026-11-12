@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { HttpTransport } from '../src/http/transport.ts';
-import { ApiError, ConflictError, ConnectionError, RateLimitError, ServerError, ValidationError } from '../src/index.ts';
+import { ApiError, ConflictError, ConnectionError, InvalidArgumentError, RateLimitError, ServerError, ValidationError } from '../src/index.ts';
 import { fixture, listResponse, MockFetch } from './support.ts';
 
 /** A transport that records its waits instead of sleeping. */
@@ -48,6 +48,25 @@ test('a given idempotency key is kept', async () => {
 
     assert.equal(http.requests[0]?.headers.get('Idempotency-Key'), 'order-1042');
     assert.equal(http.requests[1]?.headers.get('Idempotency-Key'), 'order-1042');
+});
+
+test('a blank idempotency key is refused before anything is sent', async () => {
+    for (const key of ['', '   ', '\t']) {
+        for (const maxRetries of [2, 0]) {
+            const http = new MockFetch().json({ data: fixture('charge') }, 201);
+
+            await assert.rejects(transport(http, [], { maxRetries }).request('POST', '/v1/charges', {}, { asset: 'BTC' }, key), (error: unknown) => error instanceof InvalidArgumentError && error.message.includes('cannot be blank'));
+            assert.equal(http.requests.length, 0);
+        }
+    }
+});
+
+test('an idempotency key given as a number from plain JavaScript still goes out as text', async () => {
+    const http = new MockFetch().json({ data: fixture('charge') }, 201);
+
+    await transport(http, []).request('POST', '/v1/charges', {}, { asset: 'BTC' }, 1042 as unknown as string);
+
+    assert.equal(http.lastRequest().headers.get('Idempotency-Key'), '1042');
 });
 
 for (const status of [520, 521, 522, 523, 524]) {

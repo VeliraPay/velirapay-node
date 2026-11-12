@@ -7,6 +7,7 @@ All notable changes to this library are documented here. It follows [Semantic Ve
 ### Breaking
 
 - `MemberRole` now has `owner` too, which members can be: a `switch` over it that covers every role needs a case for it. Invitations and role changes take the new `AssignableMemberRole`, which leaves owner out. Nothing changes at runtime.
+- An `idempotencyKey` that is empty or only whitespace throws an `InvalidArgumentError` before anything is sent. It used to go out as an empty header, which the API reads as no key, so a retried write could be carried out twice.
 
 ### Added
 

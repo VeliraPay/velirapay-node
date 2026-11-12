@@ -213,6 +213,13 @@ test('an empty id is refused before a request is sent', async () => {
     assert.equal(http.requests.length, 0);
 });
 
+test('a blank idempotency key is refused before a charge is created', async () => {
+    const http = new MockFetch();
+
+    await assert.rejects(client(http).charges.create({ asset: Asset.BTC, amount: '150.00', currency: 'EUR' }, { idempotencyKey: '   ' }), InvalidArgumentError);
+    assert.equal(http.requests.length, 0);
+});
+
 test('an id that a URL would read as a directory is refused', async () => {
     const http = new MockFetch();
 
