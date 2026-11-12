@@ -17,8 +17,8 @@ export interface TransportOptions {
     sleep?: (seconds: number) => Promise<void>;
 }
 
-/** The statuses worth another attempt for any request. */
-const RETRYABLE_STATUSES = [429, 502, 503, 504];
+/** The statuses worth another attempt for any request, Cloudflare's 520 to 524 for an origin it got no answer from included. */
+const RETRYABLE_STATUSES = [429, 502, 503, 504, 520, 521, 522, 523, 524];
 
 /** The codes Node gives a connection that could not be made or was cut off, which a fetch implementation may throw as they are. */
 const NETWORK_ERROR_CODES = ['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EPIPE', 'EAI_AGAIN', 'ENOTFOUND', 'EHOSTUNREACH', 'ENETUNREACH'];

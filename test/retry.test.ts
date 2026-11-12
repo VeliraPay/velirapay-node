@@ -50,6 +50,25 @@ test('a given idempotency key is kept', async () => {
     assert.equal(http.requests[1]?.headers.get('Idempotency-Key'), 'order-1042');
 });
 
+for (const status of [520, 521, 522, 523, 524]) {
+    test(`Cloudflare's ${status} for an unreachable origin is retried with the same idempotency key`, async () => {
+        const sleeps: number[] = [];
+        const http = new MockFetch()
+            .queue(new Response('<html>Cloudflare</html>', { status, headers: { 'Content-Type': 'text/html' } }))
+            .json({ data: fixture('charge') }, 201);
+
+        const response = await transport(http, sleeps).request('POST', '/v1/charges', {}, { asset: 'BTC' });
+
+        assert.equal(response.status, 201);
+        assert.equal(http.requests.length, 2);
+
+        const key = http.requests[0]?.headers.get('Idempotency-Key');
+        assert.ok(key !== null && key !== undefined);
+        assert.equal(http.requests[1]?.headers.get('Idempotency-Key'), key);
+        assert.equal(sleeps.length, 1);
+    });
+}
+
 test('a server error is retried for reads only', async () => {
     const http = new MockFetch()
         .json({ message: 'Server Error' }, 500)
