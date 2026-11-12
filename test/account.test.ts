@@ -153,15 +153,38 @@ test('the account and its payment settings are changed', async () => {
 });
 
 test('the overview is retrieved', async () => {
-    const http = new MockFetch().json({ data: {
-        object: 'overview', currency: 'USD', volume: '1250.00', volume_change_percent: 12.5, sent_volume: '1100.00', paid_charges: 12,
-        conversion_rate_percent: 60, pending_charges: 2, active_payment_links: 3, open_invoices: 1, overdue_invoices: 0, funnel: { started: 20 },
-    } });
+    const http = new MockFetch().json({
+        data: {
+            object: 'overview',
+            period: { from: '2026-10-14', to: '2026-11-12' },
+            currency: 'USD', volume: '1250.00', volume_change_percent: 12.5, sent_volume: '1100.00', paid_charges: 12,
+            conversion_rate_percent: 60, pending_charges: 2, active_payment_links: 3, open_invoices: 1, overdue_invoices: 0,
+            funnel: {
+                started: 20, paid: 12, waiting: 2, abandoned: 5, incomplete: 1,
+                assets: [{ asset: 'BTC', started: 14, paid: 9, abandoned: 4 }, { asset: 'USDT_TRON', started: 6, paid: 3, abandoned: 1 }],
+            },
+            attention: {
+                underpaid_charges: [{ id: 'k3v9x2m7q8wz', asset: 'BTC', amount: '0.002500000000000000', received_amount: '0.002000000000000000' }],
+                late_payments: [{ id: 'm2q7w4e9r1ty', asset: 'ETH', amount: '0.05', received_amount: '0.05' }],
+                payouts_waiting_for_address: [{ asset: 'SOL', count: 2 }],
+                failing_webhook_endpoints: 1,
+            },
+            assets: [{ asset: 'BTC', paid_charges: 9, share_percent: 75 }, { asset: 'USDT_TRON', paid_charges: 3, share_percent: 25 }],
+            top_payment_links: [{ id: 'p4n8r2t6y1ua', title: 'Pro plan', paid_charges: 7 }, { id: null, title: null, paid_charges: 0 }],
+            setup: { payout_address: true, payment_link: true, paid_charge: true, webhook_endpoint: false, public_profile: true },
+            daily: [
+                { date: '2026-11-11', volume: '0.00', sent_volume: '0.00', paid_charges: 0 },
+                { date: '2026-11-12', volume: '150.00', sent_volume: '145.50', paid_charges: 1 },
+            ],
+        },
+        meta: { mode: 'live' },
+    });
 
     const overview = await client(http).overview.retrieve();
 
     assert.equal(pathOf(http.lastRequest()), '/v1/overview');
-    assert.equal(overview.currency, 'USD');
+    assert.deepEqual(overview.period, { from: new Date('2026-10-14T00:00:00Z'), to: new Date('2026-11-12T00:00:00Z') });
+    assert.equal(overview.currency, Currency.USD);
     assert.equal(overview.volume, '1250.00');
     assert.equal(overview.volumeChangePercent, 12.5);
     assert.equal(overview.sentVolume, '1100.00');
@@ -171,7 +194,42 @@ test('the overview is retrieved', async () => {
     assert.equal(overview.activePaymentLinks, 3);
     assert.equal(overview.openInvoices, 1);
     assert.equal(overview.overdueInvoices, 0);
-    assert.deepEqual(overview.get('funnel'), { started: 20 });
+    assert.deepEqual(overview.funnel, {
+        started: 20, paid: 12, waiting: 2, abandoned: 5, incomplete: 1,
+        assets: [{ asset: 'BTC', started: 14, paid: 9, abandoned: 4 }, { asset: 'USDT_TRON', started: 6, paid: 3, abandoned: 1 }],
+    });
+    assert.deepEqual(overview.attention, {
+        underpaidCharges: [{ id: 'k3v9x2m7q8wz', asset: 'BTC', amount: '0.002500000000000000', receivedAmount: '0.002000000000000000' }],
+        latePayments: [{ id: 'm2q7w4e9r1ty', asset: 'ETH', amount: '0.05', receivedAmount: '0.05' }],
+        payoutsWaitingForAddress: [{ asset: Asset.SOL, count: 2 }],
+        failingWebhookEndpoints: 1,
+    });
+    assert.deepEqual(overview.assets, [{ asset: 'BTC', paidCharges: 9, sharePercent: 75 }, { asset: 'USDT_TRON', paidCharges: 3, sharePercent: 25 }]);
+    assert.deepEqual(overview.topPaymentLinks, [{ id: 'p4n8r2t6y1ua', title: 'Pro plan', paidCharges: 7 }, { id: null, title: null, paidCharges: 0 }]);
+    assert.deepEqual(overview.setup, { payoutAddress: true, paymentLink: true, paidCharge: true, webhookEndpoint: false, publicProfile: true });
+    assert.deepEqual(overview.daily, [
+        { date: new Date('2026-11-11T00:00:00Z'), volume: '0.00', sentVolume: '0.00', paidCharges: 0 },
+        { date: new Date('2026-11-12T00:00:00Z'), volume: '150.00', sentVolume: '145.50', paidCharges: 1 },
+    ]);
+    assert.equal(overview.mode, Mode.Live);
+    assert.deepEqual(overview.get('setup'), { payout_address: true, payment_link: true, paid_charge: true, webhook_endpoint: false, public_profile: true });
+});
+
+test('an overview without figures reads as empty rather than failing', async () => {
+    const http = new MockFetch().json({ data: { object: 'overview', currency: 'EUR', period: { from: null, to: null }, funnel: { started: 20 } } });
+
+    const overview = await client(http).overview.retrieve();
+
+    assert.deepEqual(overview.period, { from: null, to: null });
+    assert.deepEqual(overview.funnel, { started: 20, paid: 0, waiting: 0, abandoned: 0, incomplete: 0, assets: [] });
+    assert.deepEqual(overview.attention, { underpaidCharges: [], latePayments: [], payoutsWaitingForAddress: [], failingWebhookEndpoints: 0 });
+    assert.deepEqual(overview.assets, []);
+    assert.deepEqual(overview.topPaymentLinks, []);
+    assert.deepEqual(overview.setup, { payoutAddress: false, paymentLink: false, paidCharge: false, webhookEndpoint: false, publicProfile: false });
+    assert.deepEqual(overview.daily, []);
+    assert.equal(overview.volume, '0');
+    assert.equal(overview.volumeChangePercent, null);
+    assert.equal(overview.mode, null);
 });
 
 test('payout addresses are listed, set and removed', async () => {
@@ -210,6 +268,8 @@ test('the activity log is listed with its filters', async () => {
     const page = await client(http).activity.list({ action: 'sensitive' });
     const entry = page.data[0];
 
+    assert.equal(page.mode, Mode.Live);
+    assert.equal(page.meta['total'], 1);
     assert.equal(pathOf(http.lastRequest()), '/v1/activity');
     assert.deepEqual(queryOf(http.lastRequest()), { action: 'sensitive' });
     assert.equal(entry?.action, ActivityAction.ApiKeyCreated);

@@ -1,4 +1,6 @@
-import type { ApiResource } from './resources/api-resource.ts';
+import type { Currency, Mode, OrString } from './enums.ts';
+import { nullableString, strings, type ApiResource, type Attributes } from './resources/api-resource.ts';
+import type { SupportedAsset } from './resources/supported-asset.ts';
 
 /** Where a page sits in its list. */
 export interface PagePosition {
@@ -25,14 +27,22 @@ export class Page<T extends ApiResource> implements Iterable<T> {
     /** How many objects the whole list holds. */
     readonly total: number;
 
+    /** What the answer said about the list besides its objects, as the API sent it: its position, and anything else, such as its mode. */
+    readonly meta: Attributes;
+
+    /** The mode the list is in, for the lists whose answer says it, such as the coins on offer and the activity log; null for the others. */
+    readonly mode: OrString<Mode> | null;
+
     readonly #fetch: (page: number) => Promise<Page<T>>;
 
-    constructor(data: T[], position: PagePosition, fetch: (page: number) => Promise<Page<T>>) {
+    constructor(data: T[], position: PagePosition, fetch: (page: number) => Promise<Page<T>>, meta: Attributes = {}) {
         this.data = data;
         this.currentPage = position.currentPage;
         this.lastPage = position.lastPage;
         this.perPage = position.perPage;
         this.total = position.total;
+        this.meta = meta;
+        this.mode = nullableString(meta, 'mode');
         this.#fetch = fetch;
     }
 
@@ -85,5 +95,17 @@ export class Page<T extends ApiResource> implements Iterable<T> {
     /** Whether this page holds no objects. */
     isEmpty(): boolean {
         return this.data.length === 0;
+    }
+}
+
+/** The coins on offer, which assets.list() answers with in a single page, with the currencies their prices can be asked in. */
+export class AssetPage extends Page<SupportedAsset> {
+    /** The currencies assets.list() can give prices in, which its currency parameter takes. */
+    readonly currencies: OrString<Currency>[];
+
+    constructor(data: SupportedAsset[], position: PagePosition, fetch: (page: number) => Promise<Page<SupportedAsset>>, meta: Attributes = {}) {
+        super(data, position, fetch, meta);
+
+        this.currencies = strings(meta, 'currencies');
     }
 }

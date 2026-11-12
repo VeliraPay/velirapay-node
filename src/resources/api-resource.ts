@@ -69,6 +69,11 @@ export function nullableInt(data: Attributes, key: string): number | null {
     return typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : null;
 }
 
+/** Read a number attribute. */
+export function number(data: Attributes, key: string, fallback = 0): number {
+    return nullableNumber(data, key) ?? fallback;
+}
+
 /** Read a number attribute that may be null. */
 export function nullableNumber(data: Attributes, key: string): number | null {
     const value = data[key];

@@ -1,9 +1,12 @@
 import { InvalidArgumentError, UnexpectedResponseError } from '../errors.ts';
 import type { ApiResponse } from '../http/api-response.ts';
 import type { HttpTransport } from '../http/transport.ts';
-import { Page } from '../page.ts';
+import { Page, type PagePosition } from '../page.ts';
 import type { RequestOptions } from '../params.ts';
 import { isRecord, type ApiResource, type Attributes } from '../resources/api-resource.ts';
+
+/** A class of page, such as Page itself or one that reads more of the list's meta. */
+type PageKind<T extends ApiResource, P extends Page<T>> = new (data: T[], position: PagePosition, fetch: (page: number) => Promise<P>, meta: Attributes) => P;
 
 /** The requests shared by every group of endpoints. */
 export abstract class Service {
@@ -23,20 +26,19 @@ export abstract class Service {
         return this.transport.request(method, path, {}, body, options?.idempotencyKey);
     }
 
-    /** Fetch one page of a list. */
-    protected async page<T extends ApiResource>(path: string, params: object, hydrate: (attributes: Attributes) => T): Promise<Page<T>> {
+    /** Fetch one page of a list, as a Page unless another kind is given. */
+    protected async page<T extends ApiResource, P extends Page<T> = Page<T>>(path: string, params: object, hydrate: (attributes: Attributes) => T, kind: PageKind<T, P> = Page as unknown as PageKind<T, P>): Promise<P> {
         const response = await this.transport.request('GET', path, params);
         const data = list(response).map(hydrate);
-        const json = response.json();
-        const meta = isRecord(json['meta']) ? json['meta'] : {};
-        const currentPage = integer(meta['current_page'], 1);
+        const metadata = meta(response);
+        const currentPage = integer(metadata['current_page'], 1);
 
-        return new Page(data, {
+        return new kind(data, {
             currentPage,
-            lastPage: integer(meta['last_page'], currentPage),
-            perPage: integer(meta['per_page'], data.length),
-            total: integer(meta['total'], data.length),
-        }, (page) => this.page(path, { ...params, page }, hydrate));
+            lastPage: integer(metadata['last_page'], currentPage),
+            perPage: integer(metadata['per_page'], data.length),
+            total: integer(metadata['total'], data.length),
+        }, (page) => this.page(path, { ...params, page }, hydrate, kind), metadata);
     }
 }
 

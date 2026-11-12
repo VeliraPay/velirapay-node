@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Asset } from '../src/index.ts';
+import { Asset, AssetPage, Currency, Mode, Page } from '../src/index.ts';
 import { client, MockFetch, pathOf } from './support.ts';
 
 const assets = {
@@ -59,4 +59,18 @@ test('the coins on offer are read with their minimums', async () => {
     assert.equal(unknown?.accepted, null);
     assert.equal(unknown?.exchangeRate, null);
     assert.equal(unknown?.networkSurcharge, '2.50');
+});
+
+test('the coins come with the mode and the currencies their prices can be asked in', async () => {
+    const http = new MockFetch().json(assets);
+
+    const page = await client(http).assets.list();
+
+    assert.ok(page instanceof AssetPage);
+    assert.ok(page instanceof Page);
+    assert.deepEqual(page.currencies, [Currency.USD, Currency.EUR]);
+    assert.equal(page.mode, Mode.Live);
+    assert.deepEqual(page.meta, { mode: 'live', currencies: ['USD', 'EUR'] });
+    assert.equal(page.total, 3);
+    assert.equal(await page.nextPage(), null);
 });

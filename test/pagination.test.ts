@@ -39,6 +39,21 @@ test('a page is walked with for of, and fetches the next one', async () => {
     assert.equal(next.hasMore(), false);
 });
 
+test('each page keeps the meta of its own answer', async () => {
+    const http = new MockFetch()
+        .json({ ...listResponse([fixture('charge')], { currentPage: 1, lastPage: 2, perPage: 1, total: 2 }), meta: { current_page: 1, last_page: 2, per_page: 1, total: 2, mode: 'test' } })
+        .json(listResponse([{ ...fixture('charge'), id: 'charge000002' }], { currentPage: 2, lastPage: 2, perPage: 1, total: 2 }));
+
+    const first = await client(http).charges.list({ per_page: 1 });
+    const second = await first.nextPage();
+
+    assert.equal(first.mode, 'test');
+    assert.equal(first.meta['current_page'], 1);
+    assert.equal(second?.mode, null);
+    assert.equal(second?.meta['current_page'], 2);
+    assert.equal(second?.meta['path'], 'https://api.velirapay.com/v1/charges');
+});
+
 test('the last page has no next page', async () => {
     const http = new MockFetch().json(listResponse([fixture('charge')]));
 

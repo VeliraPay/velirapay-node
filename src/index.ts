@@ -43,7 +43,7 @@ export {
 } from './errors.ts';
 export { ApiResponse } from './http/api-response.ts';
 export type { Fetch } from './http/transport.ts';
-export { Page, type PagePosition } from './page.ts';
+export { AssetPage, Page, type PagePosition } from './page.ts';
 export type * from './params.ts';
 export { Account, AccountBusiness, Address, type AccountCheckout, type AccountInvoices } from './resources/account.ts';
 export { Activity } from './resources/activity.ts';
@@ -54,7 +54,19 @@ export { Coupon } from './resources/coupon.ts';
 export { Event } from './resources/event.ts';
 export { Invoice, InvoiceItem, type InvoiceCharge } from './resources/invoice.ts';
 export { Invitation, Member } from './resources/member.ts';
-export { Overview } from './resources/overview.ts';
+export {
+    Overview,
+    type OverviewAsset,
+    type OverviewAttention,
+    type OverviewChargeAmount,
+    type OverviewDay,
+    type OverviewFunnel,
+    type OverviewFunnelAsset,
+    type OverviewPaymentLink,
+    type OverviewPeriod,
+    type OverviewSetup,
+    type OverviewWaitingPayouts,
+} from './resources/overview.ts';
 export { PaymentLink, type CheckoutQuestion } from './resources/payment-link.ts';
 export { Payout, PayoutAddress, PayoutSummary } from './resources/payout.ts';
 export { ProPayment } from './resources/pro-payment.ts';
