@@ -28,7 +28,12 @@ export type Metadata = Record<string, string | number | boolean | null>;
 
 /** Options for a request that changes something. */
 export interface RequestOptions {
-    /** Up to 255 characters, such as an order number. For 24 hours, a repeat with the same key gets the first successful response instead of being carried out again. */
+    /**
+     * Up to 255 characters, such as an order number. For 24 hours, a repeat with the same key gets the first successful response
+     * instead of being carried out again. The answers that carry a new API key or webhook signing secret are the exception: they
+     * are never kept, so a repeat of apiKeys.create(), webhookEndpoints.create() or rotateSecret() throws a ConflictError whose
+     * wasReplayed() is true, meaning the first one succeeded.
+     */
     idempotencyKey?: string;
 }
 

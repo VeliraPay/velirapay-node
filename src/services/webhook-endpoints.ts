@@ -21,7 +21,13 @@ export class WebhookEndpointService extends Service {
         return new WebhookEndpoint(await this.request('GET', path('/v1/webhook-endpoints/%s', id)));
     }
 
-    /** Add an endpoint and send it its verification challenge. The answer carries its signing secret, shown this once, and verificationError while it has not answered. */
+    /**
+     * Add an endpoint and send it its verification challenge. The answer carries its signing secret, shown this once, and verificationError while it has not answered.
+     *
+     * The answer is never kept for the idempotency key, so when it is lost, the library's retry or a repeat throws a ConflictError whose
+     * wasReplayed() is true: the endpoint was added, but its secret cannot be shown again. Find it with list() and call rotateSecret(),
+     * since nothing relies on its first secret yet, or delete() it and add it again.
+     */
     async create(params: WebhookEndpointCreateParams, options?: RequestOptions): Promise<WebhookEndpoint> {
         return endpoint(await this.respond('POST', '/v1/webhook-endpoints', params, options));
     }
@@ -46,7 +52,14 @@ export class WebhookEndpointService extends Service {
         return new WebhookDelivery(await this.request('POST', path('/v1/webhook-endpoints/%s/test', id), undefined, options));
     }
 
-    /** Replace the endpoint's signing secret. The answer carries the new one, shown this once; the old one keeps signing for a day, until previousSecretExpiresAt. */
+    /**
+     * Replace the endpoint's signing secret. The answer carries the new one, shown this once; the old one keeps signing for a day, until previousSecretExpiresAt.
+     *
+     * The answer is never kept for the idempotency key, so when it is lost, the library's retry or a repeat throws a ConflictError whose
+     * wasReplayed() is true: the secret was rotated, but the new one cannot be shown again. The secret your receiver holds keeps
+     * verifying for a day as the previous one. Rotating again makes the lost secret the previous one and drops the one you hold at once,
+     * so only rotate again, with a fresh idempotency key, when you can deploy the new secret straight away; deliveries that fail meanwhile are retried.
+     */
     async rotateSecret(id: string, options?: RequestOptions): Promise<WebhookEndpoint> {
         return endpoint(await this.respond('POST', path('/v1/webhook-endpoints/%s/secret', id), undefined, options));
     }

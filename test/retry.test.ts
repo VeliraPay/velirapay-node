@@ -122,6 +122,28 @@ test('a write still being processed under the same key is waited for', async () 
     assert.deepEqual(sleeps, [1]);
 });
 
+test('a write whose lost answer carried a secret is reported as having succeeded, rather than run again', async () => {
+    const sleeps: number[] = [];
+    const http = new MockFetch()
+        .queue(new TypeError('fetch failed'))
+        .json({ message: 'A request with this Idempotency-Key already succeeded. Its answer carried a secret, which is shown once and not kept, so it cannot be replayed.' }, 409, { 'Idempotent-Replayed': 'true' });
+
+    await assert.rejects(transport(http, sleeps).request('POST', '/v1/webhook-endpoints/12/secret'), (error: unknown) => {
+        assert.ok(error instanceof ConflictError);
+        assert.equal(error.wasReplayed(), true);
+        assert.equal(error.retryAfter(), null);
+
+        return true;
+    });
+
+    assert.equal(http.requests.length, 2);
+    assert.equal(sleeps.length, 1);
+
+    const key = http.requests[0]?.headers.get('Idempotency-Key');
+    assert.ok(key !== null && key !== undefined);
+    assert.equal(http.requests[1]?.headers.get('Idempotency-Key'), key);
+});
+
 test('a conflict without a retry-after is not retried', async () => {
     const sleeps: number[] = [];
     const http = new MockFetch().json({ message: 'This Idempotency-Key was already used for a different request.' }, 409);
@@ -129,6 +151,7 @@ test('a conflict without a retry-after is not retried', async () => {
     await assert.rejects(transport(http, sleeps).request('POST', '/v1/charges', {}, { asset: 'BTC' }, 'order-1042'), (error: unknown) => {
         assert.ok(error instanceof ConflictError);
         assert.equal(error.retryAfter(), null);
+        assert.equal(error.wasReplayed(), false);
 
         return true;
     });

@@ -15,7 +15,13 @@ export class ApiKeyService extends Service {
         yield* (await this.list(params)).autoPagingIterator();
     }
 
-    /** Create a key in the API key's mode. Its key property holds the key itself, shown this once; leaving permissions out gives full access. */
+    /**
+     * Create a key in the API key's mode. Its key property holds the key itself, shown this once; leaving permissions out gives full access.
+     *
+     * The answer is never kept for the idempotency key, so when it is lost, the library's retry or a repeat throws a ConflictError whose
+     * wasReplayed() is true: the key was made, but cannot be shown again. Find it with list() by its name and createdAt, revoke() it,
+     * and create another with a fresh idempotency key.
+     */
     async create(params: ApiKeyCreateParams, options?: RequestOptions): Promise<ApiKey> {
         return new ApiKey(await this.request('POST', '/v1/api-keys', params, options));
     }

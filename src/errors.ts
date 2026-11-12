@@ -69,8 +69,20 @@ export class PermissionError extends ApiError {}
 /** The object does not exist for this account and mode (404). */
 export class NotFoundError extends ApiError {}
 
-/** The object's state does not allow the action, or an idempotency key was reused for a different request or is held by one still being processed (409). */
-export class ConflictError extends ApiError {}
+/**
+ * The object's state does not allow the action, or an idempotency key was reused for a different request, is held by one
+ * still being processed, or belongs to a request that succeeded but whose answer carried a secret, which wasReplayed() tells (409).
+ */
+export class ConflictError extends ApiError {
+    /**
+     * Whether the API answered from an earlier request with the same idempotency key that succeeded: one that made an API key or
+     * a webhook endpoint, or rotated an endpoint's signing secret, whose answer is never kept because it carried the key or
+     * secret. The library's own retry after a lost answer gets this too. The write was carried out, but its key or secret cannot be shown again.
+     */
+    wasReplayed(): boolean {
+        return this.response.wasReplayed();
+    }
+}
 
 /** The request failed validation (422). */
 export class ValidationError extends ApiError {
