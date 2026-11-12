@@ -2,6 +2,18 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+### Breaking
+
+- `MemberRole` now has `owner` too, which members can be: a `switch` over it that covers every role needs a case for it. Invitations and role changes take the new `AssignableMemberRole`, which leaves owner out. Nothing changes at runtime.
+
+### Added
+
+- Constants for the API's other value sets, each an object with a type of the same name: `Currency`, `MemberRole`, `AddressNetwork` (the networks payout addresses are for), `CheckoutAppearance`, `WebhookDeliveryStatus`, `PlanName`, `AccountType`, `CheckoutLocale` and `ActivityAction`, every action the activity log records. Methods take them or plain strings.
+- Fields that hold one of these, a coin, a currency, a mode, a permission or an event type are typed with it, such as `payoutAddress.network`, `account.plan`, `member.role`, `activity.action`, `apiKey.permissions`, `invoice.charges[].status` and `webhookEndpoint.events`. They stay strings, so a value the API adds later still reads, and nothing breaks.
+- Every constant, the existing ones too, is frozen, so no code can change one by mistake.
+
 ## 0.1.1 - 2026-11-12
 
 - The charges that `charges.create()`, `retrieve()`, `list()`, `iterator()`, `cancel()`, `recordRefund()`, `send()`, `accept()` and `simulate()` answer with are typed `ApiCharge`, whose `checkoutUrl` is a `string`, so `res.redirect(303, charge.checkoutUrl)` compiles under TypeScript's `strict`. Charges in webhooks and events keep `checkoutUrl: string | null`, since webhooks leave it out. Nothing changes at runtime.

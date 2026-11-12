@@ -1,4 +1,24 @@
-import type { ApiKeyPermission, Asset, BusinessType, ChargeStatus, Currency, EventType, Industry, InvoiceStatus, MemberRole, Mode, MonthlyVolume, OrString, PaymentLinkStatus, PayoutStatus, PricingType } from './enums.ts';
+import type {
+    ActivityAction,
+    ApiKeyPermission,
+    Asset,
+    AssignableMemberRole,
+    BusinessType,
+    ChargeStatus,
+    CheckoutAppearance,
+    CheckoutLocale,
+    Currency,
+    EventType,
+    Industry,
+    InvoiceStatus,
+    Mode,
+    MonthlyVolume,
+    OrString,
+    PaymentLinkStatus,
+    PayoutStatus,
+    PricingType,
+    WebhookDeliveryStatus,
+} from './enums.ts';
 
 /** An amount of money or of a coin. Pass a string, such as "49.90", to keep every decimal. */
 export type Amount = string | number;
@@ -189,7 +209,7 @@ export interface WebhookEndpointCreateParams {
 export type WebhookEndpointUpdateParams = Partial<WebhookEndpointCreateParams>;
 
 export interface WebhookDeliveryListParams extends PageParams {
-    status?: OrString<'pending' | 'succeeded' | 'failed'>;
+    status?: OrString<WebhookDeliveryStatus>;
     event?: OrString<EventType>;
 }
 
@@ -204,17 +224,17 @@ export interface ApiKeyCreateParams {
 export type ApiKeyUpdateParams = Partial<ApiKeyCreateParams>;
 
 export interface MemberUpdateParams {
-    role: OrString<MemberRole>;
+    role: OrString<AssignableMemberRole>;
 }
 
 export interface InvitationCreateParams {
     email: string;
-    role: OrString<MemberRole>;
+    role: OrString<AssignableMemberRole>;
 }
 
 export interface ActivityListParams extends PageParams {
-    /** An action, or "sensitive". */
-    action?: string;
+    /** An action, or "sensitive" for those that touch money or access. */
+    action?: OrString<ActivityAction | 'sensitive'>;
     person?: string;
     /** A subject or the start of an IP address. */
     q?: string;
@@ -249,7 +269,7 @@ export interface AccountUpdateParams {
     refund_policy_url?: string | null;
     brand_color?: string | null;
     checkout?: {
-        appearance?: OrString<'auto' | 'light' | 'dark'>;
+        appearance?: OrString<CheckoutAppearance>;
         coin_order?: OrString<Asset>[];
         default_coin?: OrString<Asset> | null;
         success_url?: string | null;
@@ -286,6 +306,6 @@ export interface PaymentSettingsUpdateParams {
     default_currency?: OrString<Currency>;
     underpayment_tolerance?: Amount;
     overpayment_threshold?: Amount;
-    checkout_locale?: OrString<'en' | 'fr' | 'de' | 'es' | 'tr' | 'pt' | 'ru' | 'ar'> | null;
+    checkout_locale?: OrString<CheckoutLocale> | null;
     invoice_reminders?: boolean;
 }

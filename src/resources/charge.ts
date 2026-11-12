@@ -1,4 +1,4 @@
-import { ChargeStatus, type Asset, type OrString } from '../enums.ts';
+import { ChargeStatus, type Asset, type Currency, type OrString } from '../enums.ts';
 import { ApiResource, bool, date, int, map, nullableString, objects, records, reference, string, type Attributes } from './api-resource.ts';
 
 /** One entry of a charge's history. */
@@ -34,7 +34,7 @@ export class Charge extends ApiResource {
     readonly fiatAmount: string;
 
     /** The fiat currency, such as "USD". */
-    readonly fiatCurrency: string;
+    readonly fiatCurrency: OrString<Currency>;
 
     /** The coin and network paid with, such as "BTC" or "USDT". */
     readonly asset: OrString<Asset>;

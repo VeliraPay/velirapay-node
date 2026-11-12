@@ -1,3 +1,4 @@
+import { WebhookDeliveryStatus, type EventType, type OrString } from '../enums.ts';
 import { ApiResource, bool, date, int, isRecord, map, nullableInt, nullableString, objects, reference, string, strings, type Attributes } from './api-resource.ts';
 
 /** Where webhooks are delivered, and whether it can receive them. Its signing secret is only returned when it is added or rotated. */
@@ -12,7 +13,7 @@ export class WebhookEndpoint extends ApiResource {
     readonly description: string | null;
 
     /** The EventType values it subscribes to. */
-    readonly events: string[];
+    readonly events: OrString<EventType>[];
 
     /** Whether it is switched on. */
     readonly active: boolean;
@@ -71,7 +72,7 @@ export class WebhookDelivery extends ApiResource {
     readonly id: string;
 
     /** The EventType value it carried. */
-    readonly event: string;
+    readonly event: OrString<EventType>;
 
     /** The id of the event it carried, null for a test delivery. */
     readonly eventId: string | null;
@@ -79,8 +80,8 @@ export class WebhookDelivery extends ApiResource {
     /** Whether it was a test event, which describes no real payment. */
     readonly test: boolean;
 
-    /** "pending", "succeeded" or "failed". */
-    readonly status: string;
+    /** One of the WebhookDeliveryStatus values: pending, succeeded or failed. */
+    readonly status: OrString<WebhookDeliveryStatus>;
 
     /** How many times it was sent. */
     readonly attempts: number;
@@ -136,7 +137,7 @@ export class WebhookDelivery extends ApiResource {
 
     /** Whether the endpoint accepted the delivery. */
     succeeded(): boolean {
-        return this.status === 'succeeded';
+        return this.status === WebhookDeliveryStatus.Succeeded;
     }
 }
 

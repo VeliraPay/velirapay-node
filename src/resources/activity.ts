@@ -1,3 +1,4 @@
+import type { ActivityAction, Mode, OrString } from '../enums.ts';
 import { ApiResource, date, map, nullableString, string, type Attributes } from './api-resource.ts';
 
 /** One thing done in the account, from its activity log. */
@@ -5,8 +6,8 @@ export class Activity extends ApiResource {
     /** The entry's id. */
     readonly id: string;
 
-    /** What was done, such as "api_key.created". */
-    readonly action: string;
+    /** One of the ActivityAction values, such as "api_key.created". */
+    readonly action: OrString<ActivityAction>;
 
     /** What was done, in words. */
     readonly description: string;
@@ -24,7 +25,7 @@ export class Activity extends ApiResource {
     readonly ipAddress: string | null;
 
     /** "live" or "test", or null for what belongs to neither, such as a sign-in. */
-    readonly mode: string | null;
+    readonly mode: OrString<Mode> | null;
 
     /** When it was done. */
     readonly createdAt: Date | null;

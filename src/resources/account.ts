@@ -1,14 +1,26 @@
-import { BusinessType, Industry, Mode, MonthlyVolume, type OrString } from '../enums.ts';
+import {
+    AccountType,
+    BusinessType,
+    CheckoutAppearance,
+    Industry,
+    Mode,
+    MonthlyVolume,
+    PlanName,
+    type Asset,
+    type CheckoutLocale,
+    type Currency,
+    type OrString,
+} from '../enums.ts';
 import { ApiResource, bool, date, isRecord, map, nullableString, oneOf, string, strings, type Attributes } from './api-resource.ts';
 
 /** How the account's checkout looks and what it falls back on. */
 export interface AccountCheckout {
-    /** "auto", "light" or "dark". */
-    appearance: string;
+    /** One of the CheckoutAppearance values: auto, light or dark. */
+    appearance: OrString<CheckoutAppearance>;
     /** The order coins are listed in. */
-    coinOrder: string[];
+    coinOrder: OrString<Asset>[];
     /** The coin the checkout starts on, or null when the merchant has not picked one. */
-    defaultCoin: string | null;
+    defaultCoin: OrString<Asset> | null;
     successUrl: string | null;
     cancelUrl: string | null;
     successMessage: string | null;
@@ -27,8 +39,8 @@ export class Account extends ApiResource {
     /** The account's slug. */
     readonly id: string;
 
-    /** Either "personal" or "organization". */
-    readonly type: string;
+    /** One of the AccountType values: personal or organization. */
+    readonly type: OrString<AccountType>;
 
     /** The account's name. */
     readonly name: string;
@@ -64,7 +76,7 @@ export class Account extends ApiResource {
     readonly business: AccountBusiness;
 
     /** The currency new links and reports default to. */
-    readonly defaultCurrency: string;
+    readonly defaultCurrency: OrString<Currency>;
 
     /** How far short of the amount due, in percent, still counts as paid. */
     readonly underpaymentTolerance: string;
@@ -72,8 +84,8 @@ export class Account extends ApiResource {
     /** How much surplus, in percent, is ignored before a charge is flagged as overpaid. */
     readonly overpaymentThreshold: string;
 
-    /** "free" or "pro". */
-    readonly plan: string;
+    /** One of the PlanName values: free or pro. */
+    readonly plan: OrString<PlanName>;
 
     /** The share of each payment kept as the platform's fee, in percent. */
     readonly feePercent: string;
@@ -87,8 +99,8 @@ export class Account extends ApiResource {
     /** The invoice numbering, footer and business details settings. */
     readonly invoices: AccountInvoices | null;
 
-    /** The fallback checkout language, or null for English. */
-    readonly checkoutLocale: string | null;
+    /** The checkout's fallback language, one of the CheckoutLocale values, or null for English. */
+    readonly checkoutLocale: OrString<CheckoutLocale> | null;
 
     /** Whether automatic invoice reminders are enabled. */
     readonly invoiceReminders: boolean;
@@ -103,7 +115,7 @@ export class Account extends ApiResource {
     readonly mode: OrString<Mode> | null;
 
     /** The coins the account can be paid in right now, in that mode. */
-    readonly acceptedAssets: string[];
+    readonly acceptedAssets: OrString<Asset>[];
 
     constructor(attributes: Attributes, meta: Attributes = {}) {
         super(attributes);
@@ -128,11 +140,11 @@ export class Account extends ApiResource {
         this.defaultCurrency = string(attributes, 'default_currency');
         this.underpaymentTolerance = string(attributes, 'underpayment_tolerance', '0');
         this.overpaymentThreshold = string(attributes, 'overpayment_threshold', '0');
-        this.plan = string(plan, 'name', 'free');
+        this.plan = string(plan, 'name', PlanName.Free);
         this.feePercent = string(plan, 'fee_percent', '0');
         this.proEndsAt = date(plan, 'pro_ends_at');
         this.checkout = isRecord(checkout) ? {
-            appearance: string(checkout, 'appearance', 'auto'),
+            appearance: string(checkout, 'appearance', CheckoutAppearance.Auto),
             coinOrder: strings(checkout, 'coin_order'),
             defaultCoin: nullableString(checkout, 'default_coin'),
             successUrl: nullableString(checkout, 'success_url'),
@@ -155,12 +167,12 @@ export class Account extends ApiResource {
 
     /** Whether the account is on Pro, which keeps no fee. */
     isPro(): boolean {
-        return this.plan === 'pro';
+        return this.plan === PlanName.Pro;
     }
 
     /** Whether this is an organization rather than a personal account. */
     isOrganization(): boolean {
-        return this.type === 'organization';
+        return this.type === AccountType.Organization;
     }
 
     /** Whether the key that fetched the account works in test mode. */

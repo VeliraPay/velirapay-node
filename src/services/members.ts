@@ -15,7 +15,7 @@ export class MemberService extends Service {
         yield* (await this.list(params)).autoPagingIterator();
     }
 
-    /** Give a member another role: "admin", "finance", "support" or "viewer". An owner is never changed this way. */
+    /** Give a member another role: admin, finance, support or viewer, as the MemberRole values name them. An owner is never changed this way. */
     async update(id: string, params: MemberUpdateParams, options?: RequestOptions): Promise<Member> {
         return new Member(await this.request('PATCH', path('/v1/members/%s', id), params, options));
     }
@@ -38,7 +38,7 @@ export class InvitationService extends Service {
         yield* (await this.list(params)).autoPagingIterator();
     }
 
-    /** Email someone an invitation to join as an "admin", "finance", "support" or "viewer", in the name of whoever made the API key. */
+    /** Email someone an invitation to join as an admin, finance, support or viewer, in the name of whoever made the API key. */
     async create(params: InvitationCreateParams, options?: RequestOptions): Promise<Invitation> {
         return new Invitation(await this.request('POST', '/v1/invitations', params, options));
     }

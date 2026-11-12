@@ -1,9 +1,10 @@
+import type { Currency, OrString } from '../enums.ts';
 import { ApiResource, int, nullableNumber, string, type Attributes } from './api-resource.ts';
 
 /** The dashboard's figures for the last 30 days. Everything else it carries, such as the funnel and what needs attention, is read with get(). */
 export class Overview extends ApiResource {
     /** The currency the amounts are in. */
-    readonly currency: string;
+    readonly currency: OrString<Currency>;
 
     /** What was paid in the period. */
     readonly volume: string;

@@ -1,3 +1,4 @@
+import type { ApiKeyPermission, Mode, OrString } from '../enums.ts';
 import { ApiResource, date, nullableString, nullableStrings, string, type Attributes } from './api-resource.ts';
 
 /** An API key of the account. The key itself is only in the answer that creates it. */
@@ -15,10 +16,10 @@ export class ApiKey extends ApiResource {
     readonly key: string | null;
 
     /** "live" or "test". */
-    readonly mode: string;
+    readonly mode: OrString<Mode>;
 
     /** The ApiKeyPermission values the key has, null for full access. */
-    readonly permissions: string[] | null;
+    readonly permissions: OrString<ApiKeyPermission>[] | null;
 
     /** The addresses and ranges it may be used from, null for anywhere. */
     readonly allowedIps: string[] | null;

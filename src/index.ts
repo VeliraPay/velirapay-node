@@ -1,20 +1,28 @@
 export { VeliraPayClient, type ClientOptions } from './client.ts';
 export { VERSION } from './version.ts';
 export {
+    AccountType,
+    ActivityAction,
+    AddressNetwork,
     ApiKeyPermission,
     Asset,
     BusinessType,
     ChargeStatus,
+    CheckoutAppearance,
+    CheckoutLocale,
+    Currency,
     EventType,
     Industry,
     InvoiceStatus,
+    MemberRole,
     Mode,
     MonthlyVolume,
     PaymentLinkStatus,
     PayoutStatus,
+    PlanName,
     PricingType,
-    type Currency,
-    type MemberRole,
+    WebhookDeliveryStatus,
+    type AssignableMemberRole,
     type OrString,
 } from './enums.ts';
 export {

@@ -1,4 +1,4 @@
-import { PaymentLinkStatus, PricingType, type OrString } from '../enums.ts';
+import { PaymentLinkStatus, PricingType, type Asset, type Currency, type OrString } from '../enums.ts';
 import { ApiResource, bool, date, int, nullableInt, nullableString, nullableStrings, records, string, strings, type Attributes } from './api-resource.ts';
 
 /** A question a payment link's checkout asks. */
@@ -34,10 +34,10 @@ export class PaymentLink extends ApiResource {
     readonly maxAmount: string | null;
 
     /** The fiat currency the link is priced in. */
-    readonly currency: string;
+    readonly currency: OrString<Currency>;
 
     /** The coins the link takes, or null for every coin the account can receive. */
-    readonly acceptedAssets: string[] | null;
+    readonly acceptedAssets: OrString<Asset>[] | null;
 
     /** One of the PaymentLinkStatus values: active or archived. */
     readonly status: OrString<PaymentLinkStatus>;

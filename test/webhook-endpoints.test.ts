@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { EventType, WebhookDeliveryStatus } from '../src/index.ts';
 import { client, MockFetch, pathOf, queryOf } from './support.ts';
 
 const endpoint = {
@@ -89,10 +90,12 @@ test('deliveries are listed and retried', async () => {
         .json({ data: { ...delivery, status: 'pending' } });
     const velirapay = client(http);
 
-    const listed = (await velirapay.webhookEndpoints.deliveries('12', { status: 'failed' })).data[0];
+    const listed = (await velirapay.webhookEndpoints.deliveries('12', { status: WebhookDeliveryStatus.Failed })).data[0];
 
     assert.equal(pathOf(http.lastRequest()), '/v1/webhook-endpoints/12/deliveries');
     assert.deepEqual(queryOf(http.lastRequest()), { status: 'failed' });
+    assert.equal(listed?.status, WebhookDeliveryStatus.Failed);
+    assert.equal(listed?.event, EventType.ChargePaid);
     assert.equal(listed?.succeeded(), false);
     assert.equal(listed?.responseStatus, 500);
     assert.equal(listed?.charge, 'abc123');

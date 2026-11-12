@@ -1,3 +1,4 @@
+import type { Currency, OrString } from '../enums.ts';
 import { ApiResource, bool, date, int, nullableInt, nullableString, string, strings, type Attributes } from './api-resource.ts';
 
 /** A discount code customers enter at checkout, or that is applied for them through a payment link's URL or the API. */
@@ -15,7 +16,7 @@ export class Coupon extends ApiResource {
     readonly amountOff: string | null;
 
     /** The only fiat currency the coupon works in, or null for a percentage that works in every one. */
-    readonly currency: string | null;
+    readonly currency: OrString<Currency> | null;
 
     /** The least the price before the discount must be. */
     readonly minAmount: string | null;

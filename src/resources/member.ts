@@ -1,3 +1,4 @@
+import type { MemberRole, OrString } from '../enums.ts';
 import { ApiResource, bool, date, nullableString, string, type Attributes } from './api-resource.ts';
 
 /** A person in the account, with their role. */
@@ -11,8 +12,8 @@ export class Member extends ApiResource {
     /** The address they sign in with. */
     readonly email: string;
 
-    /** "owner", "admin", "finance", "support" or "viewer". */
-    readonly role: string | null;
+    /** One of the MemberRole values: owner, admin, finance, support or viewer. */
+    readonly role: OrString<MemberRole> | null;
 
     /** When they joined. */
     readonly joinedAt: Date | null;
@@ -36,8 +37,8 @@ export class Invitation extends ApiResource {
     /** Where it was sent. */
     readonly email: string;
 
-    /** The role it gives once accepted: "admin", "finance", "support" or "viewer". */
-    readonly role: string;
+    /** The role it gives once accepted: admin, finance, support or viewer. */
+    readonly role: OrString<MemberRole>;
 
     /** The name of the member who sent it. */
     readonly invitedBy: string | null;

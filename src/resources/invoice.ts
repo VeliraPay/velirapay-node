@@ -1,11 +1,11 @@
-import { InvoiceStatus, type OrString } from '../enums.ts';
+import { InvoiceStatus, type Asset, type ChargeStatus, type Currency, type OrString } from '../enums.ts';
 import { ApiResource, date, nullableBool, nullableString, objects, records, string, type Attributes } from './api-resource.ts';
 
 /** A charge made to pay an invoice, one per coin the customer tried. */
 export interface InvoiceCharge {
     id: string;
-    status: string;
-    asset: string;
+    status: OrString<ChargeStatus>;
+    asset: OrString<Asset>;
 }
 
 /** A bill sent to one customer, paid through a hosted page in the coin they choose. */
@@ -35,7 +35,7 @@ export class Invoice extends ApiResource {
     readonly amount: string;
 
     /** The fiat currency, such as "USD". */
-    readonly currency: string;
+    readonly currency: OrString<Currency>;
 
     /** The lines of an itemised invoice. */
     readonly items: InvoiceItem[];

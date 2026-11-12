@@ -1,4 +1,4 @@
-import { Asset, type OrString } from '../enums.ts';
+import { Asset, type Currency, type OrString } from '../enums.ts';
 import { ApiResource, int, nullableBool, nullableString, oneOf, string, type Attributes } from './api-resource.ts';
 
 /** A coin that can be paid in the API key's mode, with the lowest price a charge in it can have. */
@@ -31,7 +31,7 @@ export class SupportedAsset extends ApiResource {
     readonly accepted: boolean | null;
 
     /** The currency exchangeRate and minimumPrice are in. */
-    readonly currency: string;
+    readonly currency: OrString<Currency>;
 
     /** What one unit of the coin is worth in that currency right now, or null while no rate is available. */
     readonly exchangeRate: string | null;

@@ -1,3 +1,4 @@
+import type { Asset, Currency, OrString } from '../enums.ts';
 import { ApiResource, bool, date, int, string, type Attributes } from './api-resource.ts';
 
 /** A crypto payment for a month of Pro: where to pay it and what to send. */
@@ -9,10 +10,10 @@ export class ProPayment extends ApiResource {
     readonly price: string;
 
     /** The currency of the price. */
-    readonly currency: string;
+    readonly currency: OrString<Currency>;
 
     /** The coin it is paid in. */
-    readonly asset: string;
+    readonly asset: OrString<Asset>;
 
     /** What to send, in the coin. */
     readonly assetAmount: string;

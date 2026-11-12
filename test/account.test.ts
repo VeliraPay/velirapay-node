@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BusinessType, Industry, MonthlyVolume } from '../src/index.ts';
+import { AccountType, ActivityAction, AddressNetwork, Asset, BusinessType, CheckoutAppearance, CheckoutLocale, Currency, Industry, Mode, MonthlyVolume, PlanName } from '../src/index.ts';
 import { body, client, fixture, MockFetch, pathOf, queryOf } from './support.ts';
 
 test('the account is retrieved with the coins it accepts', async () => {
@@ -10,6 +10,7 @@ test('the account is retrieved with the coins it accepts', async () => {
 
     assert.equal(pathOf(http.lastRequest()), '/v1/account');
     assert.equal(account.id, 'acme');
+    assert.equal(account.type, AccountType.Organization);
     assert.equal(account.isOrganization(), true);
     assert.equal(account.name, 'Acme');
     assert.equal(account.displayName, 'Acme Inc.');
@@ -17,7 +18,7 @@ test('the account is retrieved with the coins it accepts', async () => {
     assert.equal(account.supportEmail, 'billing@acme.example');
     assert.equal(account.supportPhone, '+442071234567');
     assert.equal(account.brandColor, '#4f46e5');
-    assert.equal(account.defaultCurrency, 'EUR');
+    assert.equal(account.defaultCurrency, Currency.EUR);
     assert.equal(account.underpaymentTolerance, '1');
     assert.equal(account.overpaymentThreshold, '3');
     assert.deepEqual(account.createdAt, new Date('2026-01-15T10:00:00Z'));
@@ -66,8 +67,10 @@ test("the account's checkout, invoice and payment settings are read", async () =
     assert.equal(account.termsUrl, 'https://acme.example/terms');
     assert.equal(account.refundPolicyUrl, 'https://acme.example/refunds');
     assert.deepEqual(account.checkout, { appearance: 'dark', coinOrder: ['BTC', 'ETH'], defaultCoin: 'LTC', successUrl: null, cancelUrl: null, successMessage: 'Thank you', hidePoweredBy: true });
+    assert.equal(account.checkout?.appearance, CheckoutAppearance.Dark);
+    assert.equal(account.checkout?.defaultCoin, Asset.LTC);
     assert.deepEqual(account.invoices, { numberPrefix: 'BILL', footer: 'Thank you', showBusinessDetails: true });
-    assert.equal(account.checkoutLocale, 'fr');
+    assert.equal(account.checkoutLocale, CheckoutLocale.French);
     assert.equal(account.invoiceReminders, true);
     assert.equal(account.apiPayoutAddressChanges, true);
 });
@@ -136,6 +139,7 @@ test('the account and its payment settings are changed', async () => {
     assert.deepEqual(await body(http.lastRequest()), { display_name: 'Acme', checkout: { appearance: 'dark' } });
     assert.equal(updated.displayName, 'Acme');
     assert.deepEqual(updated.acceptedAssets, ['BTC']);
+    assert.equal(updated.plan, PlanName.Pro);
     assert.equal(updated.isPro(), true);
     assert.equal(updated.feePercent, '0');
     assert.deepEqual(updated.proEndsAt, new Date('2026-12-06T00:00:00Z'));
@@ -180,11 +184,13 @@ test('payout addresses are listed, set and removed', async () => {
 
     const [set, missing] = await velirapay.payoutAddresses.list();
 
+    assert.equal(set?.network, AddressNetwork.Bitcoin);
     assert.equal(set?.address, 'bc1qexample');
+    assert.equal(missing?.network, AddressNetwork.Evm);
     assert.equal(missing?.address, null);
-    assert.deepEqual(missing?.assets, ['ETH', 'USDT']);
+    assert.deepEqual(missing?.assets, [Asset.ETH, Asset.USDT]);
 
-    const updated = await velirapay.payoutAddresses.update('bitcoin', { address: 'bc1qexample' });
+    const updated = await velirapay.payoutAddresses.update(AddressNetwork.Bitcoin, { address: 'bc1qexample' });
 
     assert.equal(http.lastRequest().method, 'PUT');
     assert.equal(pathOf(http.lastRequest()), '/v1/payout-addresses/bitcoin');
@@ -206,7 +212,8 @@ test('the activity log is listed with its filters', async () => {
 
     assert.equal(pathOf(http.lastRequest()), '/v1/activity');
     assert.deepEqual(queryOf(http.lastRequest()), { action: 'sensitive' });
-    assert.equal(entry?.action, 'api_key.created');
+    assert.equal(entry?.action, ActivityAction.ApiKeyCreated);
+    assert.equal(entry?.mode, Mode.Live);
     assert.equal(entry?.actor, 'API key "Bot"');
     assert.equal(entry?.ipAddress, '203.0.113.7');
     assert.deepEqual(entry?.properties, { prefix: 'vp_live_aaaa' });

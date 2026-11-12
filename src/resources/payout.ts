@@ -1,4 +1,4 @@
-import { PayoutStatus, type Asset, type OrString } from '../enums.ts';
+import { PayoutStatus, type AddressNetwork, type Asset, type Currency, type OrString } from '../enums.ts';
 import { ApiResource, date, int, nullableString, string, strings, type Attributes } from './api-resource.ts';
 
 /** What became of one paid charge: what came in, what was kept, what was sent and the transaction that carried it. */
@@ -28,7 +28,7 @@ export class Payout extends ApiResource {
     readonly feeFiatAmount: string | null;
 
     /** The fiat currency of feeFiatAmount and exchangeRate. */
-    readonly fiatCurrency: string | null;
+    readonly fiatCurrency: OrString<Currency> | null;
 
     /** The rate the charge was locked at. */
     readonly exchangeRate: string | null;
@@ -153,8 +153,8 @@ export class PayoutSummary extends ApiResource {
 
 /** Where the account's payouts on one network go. */
 export class PayoutAddress extends ApiResource {
-    /** The network, such as "bitcoin" or "evm", which is also its id in the paths. */
-    readonly network: string;
+    /** One of the AddressNetwork values, such as "bitcoin" or "evm", which is also its id in the paths. */
+    readonly network: OrString<AddressNetwork>;
 
     /** The network's name. */
     readonly name: string;
@@ -163,7 +163,7 @@ export class PayoutAddress extends ApiResource {
     readonly address: string | null;
 
     /** The coins on offer on this network. */
-    readonly assets: string[];
+    readonly assets: OrString<Asset>[];
 
     /** Until when payouts to a newly saved address wait. */
     readonly payoutsHeldUntil: Date | null;

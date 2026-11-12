@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { ApiKeyPermission } from '../src/index.ts';
+import { ApiKeyPermission, MemberRole, Mode } from '../src/index.ts';
 import { body, client, MockFetch, pathOf } from './support.ts';
 
 test('a key is created with the key itself shown once', async () => {
@@ -18,7 +18,8 @@ test('a key is created with the key itself shown once', async () => {
     assert.equal(request.headers.get('Idempotency-Key'), 'new-key');
     assert.deepEqual(await body(request), { name: 'Shop server', permissions: ['charges:read'], allowed_ips: ['203.0.113.7'] });
     assert.equal(apiKey.key, 'vp_live_8Kq2abc');
-    assert.deepEqual(apiKey.permissions, ['charges:read']);
+    assert.equal(apiKey.mode, Mode.Live);
+    assert.deepEqual(apiKey.permissions, [ApiKeyPermission.ChargesRead]);
     assert.deepEqual(apiKey.allowedIps, ['203.0.113.7']);
     assert.equal(apiKey.createdBy, 'Ada');
     assert.equal(apiKey.hasFullAccess(), false);
@@ -67,10 +68,10 @@ test('members are listed, changed and removed', async () => {
 
     assert.equal(pathOf(http.lastRequest()), '/v1/members');
     assert.equal(member?.email, 'ada@example.com');
-    assert.equal(member?.role, 'admin');
+    assert.equal(member?.role, MemberRole.Admin);
     assert.deepEqual(member?.joinedAt, new Date('2026-10-01T08:00:00Z'));
 
-    assert.equal((await velirapay.members.update('3', { role: 'finance' })).role, 'finance');
+    assert.equal((await velirapay.members.update('3', { role: MemberRole.Finance })).role, MemberRole.Finance);
     assert.deepEqual(await body(http.lastRequest()), { role: 'finance' });
 
     await velirapay.members.remove('3');
@@ -87,11 +88,13 @@ test('invitations are sent, listed and canceled', async () => {
         .empty();
     const velirapay = client(http);
 
-    const sent = await velirapay.invitations.create({ email: 'grace@example.com', role: 'admin' });
+    const sent = await velirapay.invitations.create({ email: 'grace@example.com', role: MemberRole.Admin });
 
     assert.equal(http.lastRequest().method, 'POST');
     assert.equal(pathOf(http.lastRequest()), '/v1/invitations');
+    assert.deepEqual(await body(http.lastRequest()), { email: 'grace@example.com', role: 'admin' });
     assert.equal(sent.id, '9');
+    assert.equal(sent.role, MemberRole.Admin);
     assert.equal(sent.invitedBy, 'Ada');
     assert.equal(sent.expired, false);
 
