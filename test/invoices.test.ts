@@ -22,9 +22,21 @@ test('an invoice is created', async () => {
     const sent = await body(request) as Record<string, unknown>;
     assert.equal(request.method, 'POST');
     assert.equal(pathOf(request), '/v1/invoices');
+    assert.deepEqual(sent['items'], [
+        { description: 'Consulting', quantity: '10', unit_amount: '100.00' },
+        { description: 'Hosting', quantity: '2.5', unit_amount: '100.00' },
+    ]);
     assert.equal(sent['due_at'], '2026-10-15');
     assert.equal(sent['send_email'], true);
     assert.equal(invoice.id, 'w7c2h5j9d3kx');
+});
+
+test("an invoice's total given as a number is sent as a decimal string", async () => {
+    const http = new MockFetch().json({ data: fixture('invoice') }, 201);
+
+    await client(http).invoices.create({ customer_name: 'Grace Hopper', customer_email: 'grace@example.com', currency: 'USD', amount: 1250.5 });
+
+    assert.deepEqual(await body(http.lastRequest()), { customer_name: 'Grace Hopper', customer_email: 'grace@example.com', currency: 'USD', amount: '1250.5' });
 });
 
 test('an invoice is read into typed properties', async () => {

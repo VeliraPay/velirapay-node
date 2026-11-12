@@ -1,13 +1,13 @@
 import type { Page } from '../page.ts';
 import type { CouponCreateParams, CouponListParams, CouponUpdateParams, RequestOptions } from '../params.ts';
 import { Coupon } from '../resources/coupon.ts';
-import { path, Service } from './service.ts';
+import { path, Service, withDecimalAmounts } from './service.ts';
 
 /** The /v1/coupons endpoints, where a coupon's id is its code. */
 export class CouponService extends Service {
     /** Create a coupon taking either percent_off or amount_off; currency is required with amount_off or min_amount. */
     async create(params: CouponCreateParams, options?: RequestOptions): Promise<Coupon> {
-        return new Coupon(await this.request('POST', '/v1/coupons', params, options));
+        return new Coupon(await this.request('POST', '/v1/coupons', withDecimalAmounts(params, 'percent_off', 'amount_off', 'min_amount'), options));
     }
 
     /** Retrieve a coupon by its code, in any case. */

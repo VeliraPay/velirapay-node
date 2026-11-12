@@ -30,6 +30,14 @@ test('a coupon is created with its expiry sent as ISO 8601', async () => {
     assert.equal(coupon.code, 'SPRING10');
 });
 
+test("a coupon's amounts given as numbers are sent as decimal strings", async () => {
+    const http = new MockFetch().json({ data: fixture('coupon') }, 201);
+
+    await client(http).coupons.create({ code: 'FIVE', amount_off: 5, currency: 'EUR', min_amount: 20, max_redemptions: 100 });
+
+    assert.deepEqual(await body(http.lastRequest()), { code: 'FIVE', amount_off: '5', currency: 'EUR', min_amount: '20', max_redemptions: 100 });
+});
+
 test('a coupon is read into typed properties', async () => {
     const http = new MockFetch().json({ data: fixture('coupon') });
 

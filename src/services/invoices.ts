@@ -1,13 +1,19 @@
 import type { Page } from '../page.ts';
 import type { InvoiceCreateParams, InvoiceListParams, RequestOptions } from '../params.ts';
 import { Invoice } from '../resources/invoice.ts';
-import { path, Service } from './service.ts';
+import { path, Service, withDecimalAmounts } from './service.ts';
 
 /** The /v1/invoices endpoints. */
 export class InvoiceService extends Service {
     /** Create an invoice, for a total or a list of items, and optionally email it to the customer. */
     async create(params: InvoiceCreateParams, options?: RequestOptions): Promise<Invoice> {
-        return new Invoice(await this.request('POST', '/v1/invoices', params, options));
+        const body = withDecimalAmounts(params, 'amount');
+
+        if (Array.isArray(params.items)) {
+            body.items = params.items.map((item) => withDecimalAmounts(item, 'quantity', 'unit_amount'));
+        }
+
+        return new Invoice(await this.request('POST', '/v1/invoices', body, options));
     }
 
     /** Retrieve an invoice by its id. */

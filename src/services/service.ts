@@ -71,6 +71,48 @@ export function list(response: ApiResponse): Attributes[] {
     return value.filter(isRecord);
 }
 
+/** A copy of the params with the amounts under the given keys, alone or in a list, written as the API reads them. */
+export function withDecimalAmounts<T extends object>(params: T, ...keys: string[]): T {
+    const copy: Attributes = { ...(params as Attributes) };
+
+    for (const key of keys) {
+        if (Object.hasOwn(copy, key)) {
+            const value = copy[key];
+
+            copy[key] = Array.isArray(value) ? value.map((item: unknown) => decimalAmount(item, key)) : decimalAmount(value, key);
+        }
+    }
+
+    return copy as T;
+}
+
+/** An amount as the API reads it: a string as it is, and a number written out in full, since the API refuses exponent notation such as 5e-7. */
+function decimalAmount(value: unknown, key: string): unknown {
+    if (typeof value !== 'number') {
+        return value;
+    }
+
+    if (!Number.isFinite(value)) {
+        throw new InvalidArgumentError(`The ${key} must be a finite number, or a string such as "49.90", not ${value}.`);
+    }
+
+    // String() gives the shortest digits that read back as the same number, so moving its point loses nothing.
+    const [, sign = '', whole = '', fraction = '', exponent] = /^(-?)(\d+)(?:\.(\d+))?e([+-]\d+)$/.exec(String(value)) ?? [];
+
+    if (exponent === undefined) {
+        return String(value);
+    }
+
+    const digits = whole + fraction;
+    const point = whole.length + Number(exponent);
+
+    if (point <= 0) {
+        return `${sign}0.${'0'.repeat(-point)}${digits}`;
+    }
+
+    return point >= digits.length ? `${sign}${digits}${'0'.repeat(point - digits.length)}` : `${sign}${digits.slice(0, point)}.${digits.slice(point)}`;
+}
+
 /** Build a path with the given ids escaped into its %s placeholders. */
 export function path(format: string, ...ids: string[]): string {
     let index = 0;

@@ -257,6 +257,35 @@ test('a charge is canceled', async () => {
     assert.equal(charge.isCanceled(), true);
 });
 
+test('amounts given as numbers are sent written out in full, as decimal strings', async () => {
+    const http = new MockFetch().json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }).json({ data: fixture('charge') }, 201);
+    const velirapay = client(http);
+
+    await velirapay.charges.create({ asset: 'BTC', amount: 49.9, currency: 'EUR', metadata: { order_id: 1042, weight: 0.0000005 } });
+
+    assert.equal(await http.lastRequest().text(), '{"asset":"BTC","amount":"49.9","currency":"EUR","metadata":{"order_id":1042,"weight":5e-7}}');
+
+    await velirapay.charges.recordRefund('k3v9x2m7q8wz', { amount: 0.0000005, reason: 'Dust' });
+
+    assert.deepEqual(await body(http.lastRequest()), { amount: '0.0000005', reason: 'Dust' });
+
+    await velirapay.charges.simulate('k3v9x2m7q8wz', { amount: 1.5e21 });
+
+    assert.deepEqual(await body(http.lastRequest()), { amount: '1500000000000000000000' });
+
+    await velirapay.request('POST', '/v1/charges', { asset: 'BTC', amount: 0.0000005 });
+
+    assert.equal(await http.lastRequest().text(), '{"asset":"BTC","amount":5e-7}');
+});
+
+test('an amount that is not a finite number is refused before anything is sent', async () => {
+    const http = new MockFetch();
+
+    await assert.rejects(client(http).charges.recordRefund('k3v9x2m7q8wz', { amount: Number.NaN }), { name: 'InvalidArgumentError', message: /amount/ });
+    await assert.rejects(client(http).charges.create({ asset: 'BTC', amount: Number.POSITIVE_INFINITY, currency: 'EUR' }), InvalidArgumentError);
+    assert.equal(http.requests.length, 0);
+});
+
 test('a refund is recorded', async () => {
     const http = new MockFetch().json({ data: fixture('charge') }, 201);
 

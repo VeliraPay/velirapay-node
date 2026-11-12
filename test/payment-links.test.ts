@@ -31,6 +31,19 @@ test('a payment link is created with its dates sent as ISO 8601', async () => {
     assert.equal(link.id, 'p4n8r2t6y1ua');
 });
 
+test("a payment link's amounts given as numbers are sent as decimal strings", async () => {
+    const http = new MockFetch().json({ data: fixture('payment_link') }, 201).json({ data: fixture('payment_link') });
+    const velirapay = client(http);
+
+    await velirapay.paymentLinks.create({ title: 'Tip jar', pricing_type: PricingType.Open, currency: 'USD', suggested_amounts: [5, 10.5, '25.00'], min_amount: 1, max_amount: null, max_payments: 100 });
+
+    assert.deepEqual(await body(http.lastRequest()), { title: 'Tip jar', pricing_type: 'open', currency: 'USD', suggested_amounts: ['5', '10.5', '25.00'], min_amount: '1', max_amount: null, max_payments: 100 });
+
+    await velirapay.paymentLinks.update('p4n8r2t6y1ua', { pricing_type: PricingType.Fixed, amount: 150 });
+
+    assert.deepEqual(await body(http.lastRequest()), { pricing_type: 'fixed', amount: '150' });
+});
+
 test('a payment link is read into typed properties', async () => {
     const http = new MockFetch().json({ data: fixture('payment_link') });
 

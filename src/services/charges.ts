@@ -2,13 +2,13 @@ import type { Page } from '../page.ts';
 import type { ChargeCreateParams, ChargeListParams, RefundParams, RequestOptions, SimulateParams } from '../params.ts';
 import type { Attributes } from '../resources/api-resource.ts';
 import { Charge, type ApiCharge } from '../resources/charge.ts';
-import { path, Service } from './service.ts';
+import { path, Service, withDecimalAmounts } from './service.ts';
 
 /** The /v1/charges endpoints. */
 export class ChargeService extends Service {
     /** Charge a customer: create a charge with what you already know about them, and send them to its checkoutUrl. */
     async create(params: ChargeCreateParams, options?: RequestOptions): Promise<ApiCharge> {
-        return apiCharge(await this.request('POST', '/v1/charges', params, options));
+        return apiCharge(await this.request('POST', '/v1/charges', withDecimalAmounts(params, 'amount'), options));
     }
 
     /** Retrieve a charge by its id. */
@@ -33,7 +33,7 @@ export class ChargeService extends Service {
 
     /** Record a refund you sent the customer from your own wallet. An underpaid charge or a late payment is accepted first, and the network surcharge is never refundable. */
     async recordRefund(id: string, params: RefundParams, options?: RequestOptions): Promise<ApiCharge> {
-        return apiCharge(await this.request('POST', path('/v1/charges/%s/refunds', id), params, options));
+        return apiCharge(await this.request('POST', path('/v1/charges/%s/refunds', id), withDecimalAmounts(params, 'amount'), options));
     }
 
     /** Email the customer the payment page of a pending charge. */
@@ -48,7 +48,7 @@ export class ChargeService extends Service {
 
     /** Pay a test-mode charge without coins, in full or by a chosen amount in the charge's coin. */
     async simulate(id: string, params: SimulateParams = {}, options?: RequestOptions): Promise<ApiCharge> {
-        return apiCharge(await this.request('POST', path('/v1/charges/%s/simulate', id), Object.keys(params).length === 0 ? undefined : params, options));
+        return apiCharge(await this.request('POST', path('/v1/charges/%s/simulate', id), Object.keys(params).length === 0 ? undefined : withDecimalAmounts(params, 'amount'), options));
     }
 }
 

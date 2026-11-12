@@ -144,11 +144,11 @@ test('the account and its payment settings are changed', async () => {
     assert.equal(updated.feePercent, '0');
     assert.deepEqual(updated.proEndsAt, new Date('2026-12-06T00:00:00Z'));
 
-    const settings = await velirapay.account.updatePaymentSettings({ underpayment_tolerance: '2' });
+    const settings = await velirapay.account.updatePaymentSettings({ underpayment_tolerance: '2', overpayment_threshold: 1.5 });
 
     assert.equal(http.lastRequest().method, 'PATCH');
     assert.equal(pathOf(http.lastRequest()), '/v1/payment-settings');
-    assert.deepEqual(await body(http.lastRequest()), { underpayment_tolerance: '2' });
+    assert.deepEqual(await body(http.lastRequest()), { underpayment_tolerance: '2', overpayment_threshold: '1.5' });
     assert.equal(settings.mode, 'live');
 });
 
