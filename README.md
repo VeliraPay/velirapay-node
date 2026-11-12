@@ -443,7 +443,7 @@ app.post('/webhooks/velirapay', express.raw({ type: 'application/json' }), (req,
         }
     }
 
-    res.sendStatus(200);
+    return res.sendStatus(200);
 });
 ```
 
