@@ -1,8 +1,7 @@
 # VeliraPay for Node.js
 
 [![Tests](https://github.com/VeliraPay/velirapay-node/actions/workflows/tests.yml/badge.svg)](https://github.com/VeliraPay/velirapay-node/actions/workflows/tests.yml)
-[![npm](https://img.shields.io/npm/v/velirapay)](https://www.npmjs.com/package/velirapay)
-[![License](https://img.shields.io/npm/l/velirapay)](LICENSE)
+[![License](https://img.shields.io/github/license/VeliraPay/velirapay-node)](LICENSE)
 
 The official Node.js library for [VeliraPay](https://velirapay.com), the crypto payment processor. It covers the v1 API (the coins on offer, charges, invoices, payment links, coupons, payouts, events, webhook endpoints and your account) and verifies the webhooks VeliraPay sends you. It is written in TypeScript, ships its type definitions and has no dependencies.
 
@@ -25,6 +24,8 @@ The full API reference is at [velirapay.com/docs](https://velirapay.com/docs).
 Node.js 22 or later. The package works with both `import` and `require`.
 
 ## Installation
+
+The first version, 0.1.0, is not on npm yet. Once it is:
 
 ```bash
 npm install velirapay
