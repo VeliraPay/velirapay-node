@@ -6,14 +6,24 @@
     "keywords": [
         "velirapay",
         "crypto",
+        "cryptocurrency",
+        "crypto-payments",
         "payments",
         "payment-gateway",
+        "payment-processing",
         "bitcoin",
         "ethereum",
+        "litecoin",
         "solana",
+        "usdt",
+        "usdc",
         "webhooks",
         "sdk",
-        "api"
+        "api",
+        "api-client",
+        "typescript",
+        "javascript",
+        "nodejs"
     ],
     "homepage": "https://velirapay.com",
     "bugs": {
