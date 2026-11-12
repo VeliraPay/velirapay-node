@@ -86,7 +86,7 @@ export function withDecimalAmounts<T extends object>(params: T, ...keys: string[
     return copy as T;
 }
 
-/** An amount as the API reads it: a string as it is, and a number written out in full, since the API refuses exponent notation such as 5e-7. */
+/** An amount as the API reads it: a string as it is, and a number rounded to 14 significant digits, as the API read JSON numbers, and written without an exponent, which the API refuses. */
 function decimalAmount(value: unknown, key: string): unknown {
     if (typeof value !== 'number') {
         return value;
@@ -96,11 +96,16 @@ function decimalAmount(value: unknown, key: string): unknown {
         throw new InvalidArgumentError(`The ${key} must be a finite number, or a string such as "49.90", not ${value}.`);
     }
 
-    // String() gives the shortest digits that read back as the same number, so moving its point loses nothing.
-    const [, sign = '', whole = '', fraction = '', exponent] = /^(-?)(\d+)(?:\.(\d+))?e([+-]\d+)$/.exec(String(value)) ?? [];
+    if (!Number.isInteger(value) && Math.abs(value) >= 1e14) {
+        throw new InvalidArgumentError(`The ${key} ${value} has too many digits to be sent as a number: pass it as a string.`);
+    }
+
+    // Rounding drops the binary noise of a float, so 0.1 + 0.2 goes out as 0.3.
+    const rounded = Number.isInteger(value) ? value : Number(value.toPrecision(14));
+    const [, sign = '', whole = '', fraction = '', exponent] = /^(-?)(\d+)(?:\.(\d+))?e([+-]\d+)$/.exec(String(rounded)) ?? [];
 
     if (exponent === undefined) {
-        return String(value);
+        return String(rounded);
     }
 
     const digits = whole + fraction;

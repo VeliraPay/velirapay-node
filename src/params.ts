@@ -20,7 +20,7 @@ import type {
     WebhookDeliveryStatus,
 } from './enums.ts';
 
-/** An amount of money or of a coin. Pass a string, such as "49.90", to keep every decimal. */
+/** An amount of money or of a coin. Pass a string, such as "49.90", to keep every decimal: a number is rounded to 14 significant digits. */
 export type Amount = string | number;
 
 /** Your own key-value data: up to 20 keys of at most 40 characters, each a string of at most 500 characters, a number, a boolean or null. */

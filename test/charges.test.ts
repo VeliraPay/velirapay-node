@@ -257,7 +257,7 @@ test('a charge is canceled', async () => {
     assert.equal(charge.isCanceled(), true);
 });
 
-test('amounts given as numbers are sent written out in full, as decimal strings', async () => {
+test('amounts given as numbers are sent as decimal strings, without an exponent', async () => {
     const http = new MockFetch().json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }).json({ data: fixture('charge') }, 201);
     const velirapay = client(http);
 
@@ -276,6 +276,38 @@ test('amounts given as numbers are sent written out in full, as decimal strings'
     await velirapay.request('POST', '/v1/charges', { asset: 'BTC', amount: 0.0000005 });
 
     assert.equal(await http.lastRequest().text(), '{"asset":"BTC","amount":5e-7}');
+});
+
+test('amounts given as numbers are rounded to 14 significant digits, as the API read them', async () => {
+    const http = new MockFetch().json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }, 201).json({ data: fixture('charge') }, 201);
+    const velirapay = client(http);
+
+    await velirapay.charges.create({ asset: 'BTC', amount: 0.1 + 0.2, currency: 'EUR' });
+
+    assert.deepEqual(await body(http.lastRequest()), { asset: 'BTC', amount: '0.3', currency: 'EUR' });
+
+    await velirapay.charges.create({ asset: 'BTC', amount: 49.9 * 1.2, currency: 'EUR' });
+
+    assert.deepEqual(await body(http.lastRequest()), { asset: 'BTC', amount: '59.88', currency: 'EUR' });
+
+    await velirapay.charges.recordRefund('k3v9x2m7q8wz', { amount: 0.1 + 0.2 });
+
+    assert.deepEqual(await body(http.lastRequest()), { amount: '0.3' });
+
+    await velirapay.charges.recordRefund('k3v9x2m7q8wz', { amount: 0.1 * 3 * 0.0001 });
+
+    assert.deepEqual(await body(http.lastRequest()), { amount: '0.00003' });
+
+    await velirapay.charges.create({ asset: 'BTC', amount: 123456789012345, currency: 'EUR' });
+
+    assert.deepEqual(await body(http.lastRequest()), { asset: 'BTC', amount: '123456789012345', currency: 'EUR' });
+});
+
+test('an amount with a fraction and too many digits to round is refused before anything is sent', async () => {
+    const http = new MockFetch();
+
+    await assert.rejects(client(http).charges.create({ asset: 'BTC', amount: 123456789012345.6, currency: 'EUR' }), { name: 'InvalidArgumentError', message: /pass it as a string/ });
+    assert.equal(http.requests.length, 0);
 });
 
 test('an amount that is not a finite number is refused before anything is sent', async () => {

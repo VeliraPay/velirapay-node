@@ -70,7 +70,7 @@ res.redirect(303, charge.checkoutUrl);
 
 They pay there, and VeliraPay tells your server about it with a [webhook](#webhooks). The exchange rate is locked when the charge is created, and the customer has 30 minutes to pay.
 
-Parameters are sent as the API names them, in snake_case, and objects come back with camelCase properties: `charge.checkoutUrl`, `charge.assetAmount`, `charge.customer.ipAddress`. Amounts are always strings, such as `'49.90'`, never floating-point numbers, so no precision is lost. A number you pass is sent as a decimal string written out in full, but a float such as `0.1 + 0.2` carries digits you did not mean, so pass strings. A charge the API answers with is an `ApiCharge`, whose `checkoutUrl` is always a string. Charges in webhooks leave it out, so theirs is `string | null`.
+Parameters are sent as the API names them, in snake_case, and objects come back with camelCase properties: `charge.checkoutUrl`, `charge.assetAmount`, `charge.customer.ipAddress`. Amounts are always strings, such as `'49.90'`, never floating-point numbers, so no precision is lost. A number you pass is rounded to 14 significant digits, as the API reads a JSON number, and sent as a decimal string, since the API refuses an exponent such as `5e-7`: `0.1 + 0.2` goes out as `'0.3'` and `0.00005` as `'0.00005'`. Pass a string to send every digit as it is. A charge the API answers with is an `ApiCharge`, whose `checkoutUrl` is always a string. Charges in webhooks leave it out, so theirs is `string | null`.
 
 With CommonJS:
 

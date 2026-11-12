@@ -35,9 +35,9 @@ test("a payment link's amounts given as numbers are sent as decimal strings", as
     const http = new MockFetch().json({ data: fixture('payment_link') }, 201).json({ data: fixture('payment_link') });
     const velirapay = client(http);
 
-    await velirapay.paymentLinks.create({ title: 'Tip jar', pricing_type: PricingType.Open, currency: 'USD', suggested_amounts: [5, 10.5, '25.00'], min_amount: 1, max_amount: null, max_payments: 100 });
+    await velirapay.paymentLinks.create({ title: 'Tip jar', pricing_type: PricingType.Open, currency: 'USD', suggested_amounts: [5, 10.5, 0.07 * 100, '25.00'], min_amount: 1, max_amount: null, max_payments: 100 });
 
-    assert.deepEqual(await body(http.lastRequest()), { title: 'Tip jar', pricing_type: 'open', currency: 'USD', suggested_amounts: ['5', '10.5', '25.00'], min_amount: '1', max_amount: null, max_payments: 100 });
+    assert.deepEqual(await body(http.lastRequest()), { title: 'Tip jar', pricing_type: 'open', currency: 'USD', suggested_amounts: ['5', '10.5', '7', '25.00'], min_amount: '1', max_amount: null, max_payments: 100 });
 
     await velirapay.paymentLinks.update('p4n8r2t6y1ua', { pricing_type: PricingType.Fixed, amount: 150 });
 
