@@ -872,7 +872,7 @@ const velirapay = new VeliraPayClient(process.env.VELIRAPAY_API_KEY, {
 
 ## Testing your integration
 
-Sign a payload yourself to test your webhook handler: `Webhook.signatureHeader()` gives the header VeliraPay would send.
+Sign a payload yourself to test your webhook handler: `Webhook.signatureHeader()` gives the header VeliraPay would send. Run the handler with the secret you sign with, here `VELIRAPAY_WEBHOOK_SECRET=whsec_test`. The [handler above](#webhooks) acknowledges test-mode events without fulfilling them, so this sample says `mode: 'live'` to reach your fulfilment; it goes no further than your own server.
 
 ```js
 import { Webhook } from 'velirapay';
@@ -880,7 +880,7 @@ import { Webhook } from 'velirapay';
 const payload = JSON.stringify({
     id: 'a5f4b1c2-0000-4000-8000-000000000000',
     event: 'charge.paid',
-    mode: 'test',
+    mode: 'live',
     created_at: new Date().toISOString(),
     data: { charge: { code: 'k3v9x2m7q8wz', status: 'paid', metadata: { order_id: '1042' } } },
 });
