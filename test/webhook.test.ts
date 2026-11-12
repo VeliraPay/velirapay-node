@@ -39,6 +39,10 @@ test('a signed charge delivery is verified and parsed', () => {
     assert.deepEqual(charge.metadata, { order_id: '1042' });
     assert.deepEqual(charge.refunds, []);
     assert.equal(charge.checkoutUrl, null);
+
+    // @ts-expect-error A charge in a webhook has no checkout page, so its checkoutUrl stays string | null.
+    const checkoutUrl: string = charge.checkoutUrl;
+    assert.equal(checkoutUrl, null);
 });
 
 test('a payment detected delivery carries the transfer that was seen', () => {

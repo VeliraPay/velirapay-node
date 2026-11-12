@@ -191,6 +191,9 @@ export class Charge extends ApiResource {
     }
 }
 
+/** A charge as the API answers with it, which always has its checkout page. Charges in webhooks and events stay plain charges, without one. */
+export type ApiCharge = Charge & { readonly checkoutUrl: string };
+
 /** What is known about the customer paying a charge, including the signals that help spot fraud. */
 export class Customer extends ApiResource {
     /** The customer's email address. */

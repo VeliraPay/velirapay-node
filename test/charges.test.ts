@@ -123,6 +123,22 @@ test('a charge is read into typed properties', async () => {
     assert.deepEqual(charge.createdAt, new Date('2026-09-20T09:55:00Z'));
 });
 
+test('the charges the API answers with are typed with their checkout page', async () => {
+    const http = new MockFetch()
+        .json({ data: fixture('charge') }, 201)
+        .json({ data: fixture('charge') })
+        .json(listResponse([fixture('charge')]));
+    const velirapay = client(http);
+
+    const created: string = (await velirapay.charges.create({ asset: 'BTC', amount: '150.00', currency: 'EUR' })).checkoutUrl;
+    const retrieved: string = (await velirapay.charges.retrieve('k3v9x2m7q8wz')).checkoutUrl;
+    const listed: string | undefined = (await velirapay.charges.list()).data[0]?.checkoutUrl;
+
+    assert.equal(created, 'https://velirapay.com/c/k3v9x2m7q8wz');
+    assert.equal(retrieved, 'https://velirapay.com/c/k3v9x2m7q8wz');
+    assert.equal(listed, 'https://velirapay.com/c/k3v9x2m7q8wz');
+});
+
 test('a charge with a network surcharge or a Lightning invoice says so', () => {
     const tron = new Charge({ ...fixture('charge'), asset: 'USDT_TRON', asset_amount: '52.50', network_surcharge: '2.50' });
     const lightning = new Charge({ ...fixture('charge'), asset: 'BTC_LIGHTNING', payment_request: 'lnbc25u1p…', deposit_address: '9f86d081884c7d65' });
