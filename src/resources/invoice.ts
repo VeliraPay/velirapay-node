@@ -67,6 +67,12 @@ export class Invoice extends ApiResource {
     /** When it was created. */
     readonly createdAt: Date | null;
 
+    /** The page the customer is offered a button back to once they have paid; absent from webhooks. */
+    readonly successUrl: string | null;
+
+    /** The page the customer can go back to from the invoice without paying; absent from webhooks. */
+    readonly cancelUrl: string | null;
+
     constructor(attributes: Attributes) {
         super(attributes);
 
@@ -93,6 +99,8 @@ export class Invoice extends ApiResource {
         this.paidAt = date(attributes, 'paid_at');
         this.voidedAt = date(attributes, 'voided_at');
         this.createdAt = date(attributes, 'created_at');
+        this.successUrl = nullableString(attributes, 'success_url');
+        this.cancelUrl = nullableString(attributes, 'cancel_url');
     }
 
     /** Whether the invoice can still be paid. */

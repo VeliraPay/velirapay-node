@@ -110,6 +110,7 @@ test('a signed invoice delivery is parsed', () => {
     assert.equal(invoice.isPaid(), true);
     assert.equal(invoice.overdue, null);
     assert.equal(invoice.documentUrl, null);
+    assert.equal(invoice.successUrl, null);
     assert.deepEqual(invoice.charges.map((charge) => charge.id), ['m2q7w4e9r1ty', 'z8x6c4v2b0nm']);
     assert.deepEqual(invoice.dueAt, new Date('2026-10-15T00:00:00Z'));
 });

@@ -2,6 +2,10 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- `invoices.create()` takes `success_url` and `cancel_url`, public https:// addresses the invoice's page and its charges' checkout offer the customer a way back to: a button once they have paid, and a link while it is open. `invoice.successUrl` and `invoice.cancelUrl` read them back, and are `null` in webhooks, which leave them out.
+
 ## 0.2.0 - 2026-11-12
 
 ### Breaking

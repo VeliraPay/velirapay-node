@@ -15,6 +15,8 @@ test('an invoice is created', async () => {
             { description: 'Hosting', quantity: '2.5', unit_amount: '100.00' },
         ],
         due_at: '2026-10-15',
+        success_url: 'https://example.com/orders/1042',
+        cancel_url: 'https://example.com/checkout',
         send_email: true,
     });
 
@@ -28,6 +30,8 @@ test('an invoice is created', async () => {
     ]);
     assert.equal(sent['due_at'], '2026-10-15');
     assert.equal(sent['send_email'], true);
+    assert.equal(sent['success_url'], 'https://example.com/orders/1042');
+    assert.equal(sent['cancel_url'], 'https://example.com/checkout');
     assert.equal(invoice.id, 'w7c2h5j9d3kx');
 });
 
@@ -60,6 +64,8 @@ test('an invoice is read into typed properties', async () => {
     assert.deepEqual(invoice.dueAt, new Date('2026-10-15T00:00:00Z'));
     assert.equal(invoice.hostedUrl, 'https://velirapay.com/i/w7c2h5j9d3kx');
     assert.equal(invoice.documentUrl, 'https://velirapay.com/i/w7c2h5j9d3kx/document');
+    assert.equal(invoice.successUrl, 'https://example.com/orders/1042');
+    assert.equal(invoice.cancelUrl, null);
     assert.deepEqual(invoice.charges, [{ id: 'm2q7w4e9r1ty', status: 'expired', asset: 'ETH' }]);
     assert.deepEqual(invoice.sentAt, new Date('2026-09-21T08:00:00Z'));
     assert.equal(invoice.paidAt, null);

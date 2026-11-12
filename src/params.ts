@@ -121,6 +121,10 @@ export interface InvoiceCreateParams {
     memo?: string | null;
     /** The day it is due, as YYYY-MM-DD. */
     due_at?: string | null;
+    /** A public https:// address the customer is offered a button back to once they have paid. */
+    success_url?: string | null;
+    /** A public https:// address the customer can go back to from the invoice without paying. */
+    cancel_url?: string | null;
     send_email?: boolean;
 }
 

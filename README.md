@@ -243,6 +243,7 @@ const invoice = await velirapay.invoices.create({
         { description: 'Hosting', quantity: '1', unit_amount: '250.00' },
     ],
     due_at: '2026-12-01', // a day, as YYYY-MM-DD
+    success_url: 'https://example.com/orders/1042',
     send_email: true,
 });
 
@@ -469,7 +470,7 @@ The charge and invoice in a delivery are not quite the ones the API answers with
 
 - A charge's coin amounts and exchange rate carry all 18 decimal places (`"0.002500000000000000"` rather than `"0.0025"`). Compare amounts as numbers, not as strings.
 - A charge has no `timeline`, `refunds`, `checkoutUrl`, `receiptUrl`, `successUrl`, `cancelUrl` or `successMessage`. It names its payment link with its title and its invoice with its number: `charge.paymentLink` and `charge.invoice` hold the codes, and `charge.paymentLinkTitle` and `charge.invoiceNumber` the rest, which are `null` on the API's charges.
-- An invoice has no `overdue` or `documentUrl`; both are `null`.
+- An invoice has no `overdue`, `documentUrl`, `successUrl` or `cancelUrl`; all four are `null`.
 - `charge.refunded` carries no refund. Read its amount, txid and reason from the event: `(await velirapay.events.retrieve(eventId)).details`.
 
 Fetch the object when you need what a delivery leaves out.
