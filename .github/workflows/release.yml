@@ -9,14 +9,9 @@ permissions:
   contents: read
 
 jobs:
-  publish:
-    name: Publish to npm
+  build:
+    name: Check and pack
     runs-on: ubuntu-latest
-    environment: npm
-
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
       - name: Checkout code
@@ -28,16 +23,14 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26'
-          registry-url: 'https://registry.npmjs.org'
 
-      - name: Check the tag and npm
+      - name: Check the tag
         run: |
           version=$(node -p "require('./package.json').version")
           if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
             echo "The tag ${GITHUB_REF_NAME} does not match the version in package.json, ${version}." >&2
             exit 1
           fi
-          node -e "const [major, minor, patch] = process.argv[1].split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) { console.error('Trusted publishing needs npm 11.5.1 or later, not ' + process.argv[1] + '.'); process.exit(1); }" "$(npm --version)"
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -48,5 +41,68 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Pack
+        run: npm pack
+
+      - name: Keep the package for publishing
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package
+          path: velirapay-*.tgz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    environment: npm
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check npm
+        run: |
+          node -e "const [major, minor, patch] = process.argv[1].split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) { console.error('Trusted publishing needs npm 11.5.1 or later, not ' + process.argv[1] + '.'); process.exit(1); }" "$(npm --version)"
+
+      - name: Fetch the package
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+
       - name: Publish
-        run: npm publish
+        run: npm publish "./velirapay-${GITHUB_REF_NAME#v}.tgz" --provenance
+
+  github-release:
+    name: Create the GitHub release
+    needs: publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Write the release notes
+        run: |
+          awk -v version="${GITHUB_REF_NAME#v}" '/^## / { if (found) exit; if (index($0, "## " version " ") == 1) { found = 1; next } } found { print }' CHANGELOG.md | sed -e '/./,$!d' > "${RUNNER_TEMP}/notes.md"
+          if [ ! -s "${RUNNER_TEMP}/notes.md" ]; then
+            echo "CHANGELOG.md has no section for ${GITHUB_REF_NAME#v}." >&2
+            exit 1
+          fi
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --verify-tag --title "${GITHUB_REF_NAME}" --notes-file "${RUNNER_TEMP}/notes.md"
