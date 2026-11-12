@@ -1,5 +1,5 @@
 import { ChargeStatus, type Asset, type Currency, type OrString } from '../enums.ts';
-import { ApiResource, bool, date, int, map, nullableString, objects, records, reference, string, type Attributes } from './api-resource.ts';
+import { ApiResource, bool, date, int, map, nullableInt, nullableString, objects, records, reference, string, type Attributes } from './api-resource.ts';
 
 /** One entry of a charge's history. */
 export interface ChargeTimelineEntry {
@@ -213,6 +213,15 @@ export class Customer extends ApiResource {
     /** The IP address the customer paid from, recorded by the checkout or passed when the charge was created. */
     readonly ipAddress: string | null;
 
+    /** The country the hosted checkout placed the IP address in, as an ISO 3166 two-letter code, or T1 for Tor; null for a charge created through the API. */
+    readonly ipCountry: string | null;
+
+    /** The number of the network (autonomous system) the IP address belongs to, such as 24940. */
+    readonly ipAsn: number | null;
+
+    /** Who runs that network, such as an internet provider or a hosting company. */
+    readonly ipNetwork: string | null;
+
     /** The user agent of the browser the customer paid from. */
     readonly userAgent: string | null;
 
@@ -234,6 +243,9 @@ export class Customer extends ApiResource {
         this.email = nullableString(attributes, 'email');
         this.name = nullableString(attributes, 'name');
         this.ipAddress = nullableString(attributes, 'ip_address');
+        this.ipCountry = nullableString(attributes, 'ip_country');
+        this.ipAsn = nullableInt(attributes, 'ip_asn');
+        this.ipNetwork = nullableString(attributes, 'ip_network');
         this.userAgent = nullableString(attributes, 'user_agent');
         this.reference = nullableString(attributes, 'reference');
         this.phone = nullableString(attributes, 'phone');

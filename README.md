@@ -203,6 +203,8 @@ charge.customer.metadata;  // { orders: 7 }
 
 Every field is optional, and any other key is refused with a `ValidationError`. The older `customer_email` parameter still works.
 
+The customer also comes back with what VeliraPay works out from the IP address, which you cannot send: `ipCountry`, the country the hosted checkout placed it in, as an ISO 3166 two-letter code or `'T1'` for Tor (`null` for a charge created through the API), and `ipAsn` and `ipNetwork`, the number of the network it belongs to and who runs it, such as `24940` and `'Hetzner Online GmbH'`. A customer on a hosting company's network is often a bot or someone hiding behind a server, and a country that differs from the one they gave is worth a second look.
+
 ### Network surcharges
 
 Passing a payment on costs the same whatever its size on some networks, so the customer pays that part: a charge in USDT on Tron (`Asset.USDT_TRON`) asks for 2.50 USDT on top of the price. The coin says so before it is chosen, as `coin.networkSurcharge` from `assets.list()`, so tell the customer; the checkout does. A charge counts it in `assetAmount` and gives it again as `charge.networkSurcharge`, which is `null` for every coin without one. VeliraPay keeps it: it is not part of your payout, and a refund can never include it.

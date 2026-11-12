@@ -111,6 +111,9 @@ test('a charge is read into typed properties', async () => {
     assert.equal(charge.customer.email, 'ada@example.com');
     assert.equal(charge.customer.name, 'Ada Lovelace');
     assert.equal(charge.customer.ipAddress, '203.0.113.7');
+    assert.equal(charge.customer.ipCountry, 'GB');
+    assert.equal(charge.customer.ipAsn, 2856);
+    assert.equal(charge.customer.ipNetwork, 'British Telecommunications PLC');
     assert.ok(charge.customer.userAgent?.startsWith('Mozilla/5.0 (Macintosh;'));
     assert.equal(charge.customer.reference, 'cus_1042');
     assert.equal(charge.customer.phone, '+44 20 7946 0958');
@@ -181,6 +184,18 @@ test('a charge sent without a customer object takes it from the older fields', a
     assert.equal(charge.customer.ipAddress, null);
     assert.deepEqual(charge.customer.metadata, {});
     assert.equal(new Charge({ customer_email: 'ada@example.com' }).customer.email, 'ada@example.com');
+});
+
+test("a customer sent without the IP address's country and network reads them as null", async () => {
+    const { ip_country: _country, ip_asn: _asn, ip_network: _network, ...customer } = fixture('charge')['customer'] as Record<string, unknown>;
+    const http = new MockFetch().json({ data: { ...fixture('charge'), customer } });
+
+    const charge = await client(http).charges.retrieve('k3v9x2m7q8wz');
+
+    assert.equal(charge.customer.ipAddress, '203.0.113.7');
+    assert.equal(charge.customer.ipCountry, null);
+    assert.equal(charge.customer.ipAsn, null);
+    assert.equal(charge.customer.ipNetwork, null);
 });
 
 test('attributes the library does not know are kept', async () => {

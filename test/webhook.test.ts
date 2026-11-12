@@ -37,6 +37,9 @@ test('a signed charge delivery is verified and parsed', () => {
     assert.equal(charge.transactions[0]?.confirmations, 2);
     assert.equal(charge.transactions[0]?.requiredConfirmations, 2);
     assert.equal(charge.customer.ipAddress, '203.0.113.7');
+    assert.equal(charge.customer.ipCountry, 'DE');
+    assert.equal(charge.customer.ipAsn, 24940);
+    assert.equal(charge.customer.ipNetwork, 'Hetzner Online GmbH');
     assert.equal(charge.customer.email, 'ada@example.com');
     assert.deepEqual(charge.customer.metadata, {});
     assert.deepEqual(charge.metadata, { order_id: '1042' });
@@ -46,6 +49,21 @@ test('a signed charge delivery is verified and parsed', () => {
     // @ts-expect-error A charge in a webhook has no checkout page, so its checkoutUrl stays string | null.
     const checkoutUrl: string = charge.checkoutUrl;
     assert.equal(checkoutUrl, null);
+});
+
+test("a delivery whose customer leaves out the IP address's country and network reads them as null", () => {
+    const delivery = JSON.parse(payload('webhook_charge')) as { data: { charge: { customer: Record<string, unknown> } } };
+    const { ip_country: _country, ip_asn: _asn, ip_network: _network, ...customer } = delivery.data.charge.customer;
+    delivery.data.charge.customer = customer;
+    const raw = JSON.stringify(delivery);
+
+    const charge = Webhook.constructEvent(raw, Webhook.signatureHeader(raw, SECRET), SECRET).charge;
+
+    assert.ok(charge !== null);
+    assert.equal(charge.customer.ipAddress, '203.0.113.7');
+    assert.equal(charge.customer.ipCountry, null);
+    assert.equal(charge.customer.ipAsn, null);
+    assert.equal(charge.customer.ipNetwork, null);
 });
 
 test('a charge that paid an invoice names the invoice', () => {
