@@ -1,7 +1,7 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "name": "velirapay",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "The official Node.js library for VeliraPay crypto payments: charges, payment links, invoices, payouts, events and webhook verification.",
     "keywords": [
         "velirapay",
