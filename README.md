@@ -354,6 +354,7 @@ payout.grossAmount; // what the customer paid
 payout.feeAmount;   // what was kept
 payout.netAmount;   // what you are owed, before the chain's own fee
 payout.networkFee;  // what the chain charged
+payout.merchantNetworkReserve; // what of your share was set aside for network costs, or null
 payout.sentAmount;  // what therefore reached you
 payout.payoutTxid;  // the transaction, and payout.explorerUrl its page on a block explorer
 payout.lastError;   // why the last try did not work, or why it is held
@@ -371,6 +372,23 @@ for (const coin of await velirapay.payouts.summary()) {
     coin.waitingForAddress; // how many payouts wait for you to give an address
 }
 ```
+
+On charges quoted under [processing terms](#processing-terms), your share pays the network costs of passing it on. Where the exact cost is not known when the payout is sent, as for ETH and the other EVM chains' own coins, TRX and Lightning routing, an estimate is set aside from your share first, and `payout.merchantNetworkReserve` says what became of it, in the payout's coin:
+
+```js
+payout.merchantNetworkReserve;
+// {
+//     reserved: "0.0004",        // what was set aside from your share
+//     payoutCost: "0.00025",     // what forwarding cost, from its receipt; null until it is known
+//     sweepBudget: "0.0001",     // set aside for sweeping VeliraPay's fee to its cold wallet afterwards
+//     sweepCost: "0.00008",      // what that sweep cost; null until its receipts are known
+//     sweepAvailable: "0.00002", // what is left of the sweep budget
+//     held: "0.00007",           // what is still held for you, counted conservatively while costs are open
+//     residual: "0.00007",       // what was left unused once every cost is known; null until then
+// }
+```
+
+The residual stays owed to you: it is recorded, not sent back automatically. `merchantNetworkReserve` is `null` for older charges, the Bitcoin family, USDT and USDC, and payouts not sent yet.
 
 ### Payout addresses
 

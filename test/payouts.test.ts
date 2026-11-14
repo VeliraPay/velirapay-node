@@ -40,6 +40,44 @@ test('a payout is read by its charge into typed properties', async () => {
     assert.deepEqual(read.confirmedAt, new Date('2026-11-02T21:00:04Z'));
 });
 
+test("a payout whose cost was not known when it was sent says what of the merchant's share was set aside", async () => {
+    const reserve = { reserved: '0.0004', payout_cost: '0.00025', sweep_budget: '0.0001', sweep_cost: '0.00008', sweep_available: '0.00002', held: '0.00007', residual: '0.00007' };
+    const http = new MockFetch()
+        .json({ data: { ...payout, asset: 'ETH', merchant_network_reserve: reserve } })
+        .json({ data: { ...payout, asset: 'ETH', status: 'sending', merchant_network_reserve: { ...reserve, payout_cost: null, sweep_cost: null, sweep_available: '0.0001', held: '0.0001', residual: null } } });
+    const velirapay = client(http);
+
+    const settled = await velirapay.payouts.retrieve('k3v9x2m7q8wz');
+    const open = await velirapay.payouts.retrieve('k3v9x2m7q8wz');
+
+    assert.deepEqual(settled.merchantNetworkReserve, {
+        reserved: '0.0004',
+        payoutCost: '0.00025',
+        sweepBudget: '0.0001',
+        sweepCost: '0.00008',
+        sweepAvailable: '0.00002',
+        held: '0.00007',
+        residual: '0.00007',
+    });
+    assert.deepEqual(open.merchantNetworkReserve, {
+        reserved: '0.0004',
+        payoutCost: null,
+        sweepBudget: '0.0001',
+        sweepCost: null,
+        sweepAvailable: '0.0001',
+        held: '0.0001',
+        residual: null,
+    });
+});
+
+test('a payout without a network reserve reads it as null', async () => {
+    const http = new MockFetch().json({ data: payout }).json({ data: { ...payout, merchant_network_reserve: null } });
+    const velirapay = client(http);
+
+    assert.equal((await velirapay.payouts.retrieve('k3v9x2m7q8wz')).merchantNetworkReserve, null);
+    assert.equal((await velirapay.payouts.retrieve('k3v9x2m7q8wz')).merchantNetworkReserve, null);
+});
+
 test('payouts are listed with their filters', async () => {
     const http = new MockFetch().json({ data: [payout], meta: { current_page: 1, last_page: 1, per_page: 25, total: 1 } });
 

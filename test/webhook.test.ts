@@ -132,6 +132,29 @@ test('a payout delivery carries the charge and its payout', () => {
     assert.equal(payout.networkFee, '0.0000044');
     assert.equal(payout.payoutTxid, 'cc9a3e0b5629235194a6174d805c55df5554c94e2b4de8dc584db2091cc5cacf');
     assert.deepEqual(payout.confirmedAt, new Date('2026-09-20T10:41:02Z'));
+    assert.equal(payout.merchantNetworkReserve, null);
+});
+
+test("a payout sent before its cost is known carries what of the merchant's share was set aside", () => {
+    const event = signed('webhook_payout_sent');
+
+    assert.equal(event.is(EventType.PayoutSent), true);
+    assert.equal(event.charge?.asset, Asset.ETH);
+
+    const payout = event.payout;
+    assert.ok(payout !== null);
+    assert.equal(payout.isSent(), false);
+    assert.equal(payout.networkFee, null);
+    assert.equal(payout.sentAmount, '0.048725');
+    assert.deepEqual(payout.merchantNetworkReserve, {
+        reserved: '0.0004',
+        payoutCost: null,
+        sweepBudget: '0.0001',
+        sweepCost: '0',
+        sweepAvailable: '0.0001',
+        held: '0.0001',
+        residual: null,
+    });
 });
 
 test('only a payout delivery carries a payout', () => {

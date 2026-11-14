@@ -1,5 +1,23 @@
 import { PayoutStatus, type AddressNetwork, type Asset, type Currency, type OrString } from '../enums.ts';
-import { ApiResource, date, int, nullableString, string, strings, type Attributes } from './api-resource.ts';
+import { ApiResource, date, int, isRecord, nullableString, string, strings, type Attributes } from './api-resource.ts';
+
+/** What of the merchant's share was set aside for the network costs of a payout whose exact cost is not known when it is sent, in the payout's coin. */
+export interface NetworkReserve {
+    /** What was set aside from the merchant's share. */
+    reserved: string;
+    /** What forwarding the payout cost, from its receipt; null until it is known. */
+    payoutCost: string | null;
+    /** What of the reserve was set aside for later sweeping VeliraPay's fee to its cold wallet. */
+    sweepBudget: string;
+    /** What that sweep cost, from its receipts; null until they are all known. */
+    sweepCost: string | null;
+    /** What is left of the sweep budget. */
+    sweepAvailable: string;
+    /** What of the reserve is still held for the merchant, counted conservatively while costs are open. */
+    held: string;
+    /** What was left unused once every cost is known, which stays owed to the merchant and is recorded rather than sent back automatically; null while costs are open. */
+    residual: string | null;
+}
 
 /** What became of one paid charge: what came in, what was kept, what was sent and the transaction that carried it. */
 export class Payout extends ApiResource {
@@ -39,6 +57,13 @@ export class Payout extends ApiResource {
     /** What the chain charged, once it has been broadcast. */
     readonly networkFee: string | null;
 
+    /**
+     * What of the merchant's share was set aside for network costs, for a payout whose exact cost is not known when it is sent:
+     * ETH and the other EVM chains' own coins, TRX, and Lightning routing. Null for older charges, the Bitcoin family,
+     * USDT and USDC forwarders and payouts not sent yet.
+     */
+    readonly merchantNetworkReserve: NetworkReserve | null;
+
     /** What reached the merchant, once it has been broadcast. */
     readonly sentAmount: string | null;
 
@@ -72,6 +97,8 @@ export class Payout extends ApiResource {
     constructor(attributes: Attributes) {
         super(attributes);
 
+        const reserve = attributes['merchant_network_reserve'];
+
         this.id = string(attributes, 'id');
         this.charge = string(attributes, 'charge');
         this.status = string(attributes, 'status');
@@ -84,6 +111,15 @@ export class Payout extends ApiResource {
         this.exchangeRate = nullableString(attributes, 'exchange_rate');
         this.netAmount = string(attributes, 'net_amount', '0');
         this.networkFee = nullableString(attributes, 'network_fee');
+        this.merchantNetworkReserve = isRecord(reserve) ? {
+            reserved: string(reserve, 'reserved', '0'),
+            payoutCost: nullableString(reserve, 'payout_cost'),
+            sweepBudget: string(reserve, 'sweep_budget', '0'),
+            sweepCost: nullableString(reserve, 'sweep_cost'),
+            sweepAvailable: string(reserve, 'sweep_available', '0'),
+            held: string(reserve, 'held', '0'),
+            residual: nullableString(reserve, 'residual'),
+        } : null;
         this.sentAmount = nullableString(attributes, 'sent_amount');
         this.payoutAddress = nullableString(attributes, 'payout_address');
         this.payoutTxid = nullableString(attributes, 'payout_txid');

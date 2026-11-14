@@ -78,7 +78,7 @@ export {
     type OverviewWaitingPayouts,
 } from './resources/overview.ts';
 export { PaymentLink, type CheckoutQuestion } from './resources/payment-link.ts';
-export { Payout, PayoutAddress, PayoutSummary } from './resources/payout.ts';
+export { Payout, PayoutAddress, PayoutSummary, type NetworkReserve } from './resources/payout.ts';
 export { ProPayment } from './resources/pro-payment.ts';
 export { SupportedAsset } from './resources/supported-asset.ts';
 export { WebhookDelivery, WebhookDeliveryAttempt, WebhookEndpoint } from './resources/webhook-endpoint.ts';
