@@ -153,6 +153,45 @@ test('a charge with a network surcharge or a Lightning invoice says so', () => {
     assert.equal(lightning.paymentRequest, 'lnbc25u1p…');
 });
 
+test('a charge quoted again in the coin that arrived keeps its first quote, beside its processing terms', async () => {
+    const http = new MockFetch().json({
+        data: {
+            ...fixture('charge'),
+            status: 'expired',
+            fiat_amount: '10.99',
+            fiat_currency: 'USD',
+            asset: 'USDT_TRON',
+            asset_amount: '13.49',
+            network_surcharge: '2.50',
+            exchange_rate: '1',
+            processing_terms: { percent: '1.75', max_forwarding_percent: 10 },
+            switched_from: { asset: 'TRX', asset_amount: '36.633334', exchange_rate: '0.3', switched_at: '2026-11-14T12:05:49.000000Z' },
+        },
+    });
+
+    const charge = await client(http).charges.retrieve('k3v9x2m7q8wz');
+
+    assert.equal(charge.asset, Asset.USDT_TRON);
+    assert.equal(charge.assetAmount, '13.49');
+    assert.equal(charge.exchangeRate, '1');
+    assert.equal(charge.fiatAmount, '10.99');
+    assert.deepEqual(charge.processingTerms, { percent: '1.75', maxForwardingPercent: 10 });
+    assert.deepEqual(charge.switchedFrom, { asset: Asset.TRX, assetAmount: '36.633334', exchangeRate: '0.3', switchedAt: new Date('2026-11-14T12:05:49Z') });
+});
+
+test('a charge without processing terms or a first quote reads both as null', () => {
+    const absent = new Charge(fixture('charge'));
+    const empty = new Charge({ ...fixture('charge'), processing_terms: null, switched_from: null });
+    const undated = new Charge({ ...fixture('charge'), switched_from: { asset: 'TRX', asset_amount: '36.633334', exchange_rate: '0.3', switched_at: null } });
+
+    assert.equal(absent.processingTerms, null);
+    assert.equal(absent.switchedFrom, null);
+    assert.equal(empty.processingTerms, null);
+    assert.equal(empty.switchedFrom, null);
+    assert.equal(undated.switchedFrom?.asset, 'TRX');
+    assert.equal(undated.switchedFrom?.switchedAt, null);
+});
+
 test("the customer's details are sent with a new charge", async () => {
     const http = new MockFetch().json({ data: fixture('charge') }, 201);
     const customer = { email: 'ada@example.com', ip_address: '203.0.113.7', user_agent: 'Mozilla/5.0', reference: 'cus_1042', country: 'GB', metadata: { orders: 7 } };

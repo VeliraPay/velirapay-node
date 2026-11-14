@@ -1,5 +1,5 @@
 import { ChargeStatus, type Asset, type Currency, type OrString } from '../enums.ts';
-import { ApiResource, bool, date, int, map, nullableInt, nullableString, objects, records, reference, string, type Attributes } from './api-resource.ts';
+import { ApiResource, bool, date, int, isRecord, map, nullableInt, nullableString, objects, records, reference, string, type Attributes } from './api-resource.ts';
 
 /** One entry of a charge's history. */
 export interface ChargeTimelineEntry {
@@ -11,6 +11,26 @@ export interface ChargeTimelineEntry {
 export interface CustomFieldAnswer {
     label: string;
     value: string;
+}
+
+/** The quote a charge was first created with, kept once it was quoted again in the other coin that arrived at its address. */
+export interface OriginalQuote {
+    /** The coin the charge first asked for, such as "TRX". */
+    asset: OrString<Asset>;
+    /** The amount of that coin it first asked for. */
+    assetAmount: string;
+    /** Fiat per one unit of that coin, as first locked. */
+    exchangeRate: string;
+    /** When the charge was quoted again in the coin that arrived. */
+    switchedAt: Date | null;
+}
+
+/** The processing fee fixed when a charge was quoted. */
+export interface ProcessingTerms {
+    /** The processing fee, in percent of what the charge takes in, such as "1.75". */
+    percent: string;
+    /** The most forwarding a managed payment to you may cost, in percent of your share; a payout that would cost more waits. */
+    maxForwardingPercent: number;
 }
 
 /** A single payment in one coin, with the rate locked and a deposit address of its own. */
@@ -42,14 +62,27 @@ export class Charge extends ApiResource {
     /** The fiat currency, such as "USD". */
     readonly fiatCurrency: OrString<Currency>;
 
-    /** The coin and network paid with, such as "BTC" or "USDT". */
+    /**
+     * The coin and network paid with, such as "BTC" or "USDT". It can change once: TRX and USDT on Tron share deposit addresses,
+     * so a charge that closed with only the other coin at its address is quoted again in that coin; see switchedFrom.
+     */
     readonly asset: OrString<Asset>;
 
-    /** The exact amount of the coin to send. */
+    /** The exact amount of the coin to send, in the charge's current coin. */
     readonly assetAmount: string;
 
     /** What of assetAmount the customer pays on top of the price for the network, which VeliraPay keeps; null for a coin without one. */
     readonly networkSurcharge: string | null;
+
+    /** The processing fee fixed when the charge was quoted; null for older charges and for VeliraPay's own billing. */
+    readonly processingTerms: ProcessingTerms | null;
+
+    /**
+     * The charge's first quote, once it was quoted again in the other coin that arrived at its address; null for almost every charge.
+     * asset, assetAmount, exchangeRate and networkSurcharge then describe the coin that arrived, and fiatAmount is unchanged.
+     * A charge switches at most once.
+     */
+    readonly switchedFrom: OriginalQuote | null;
 
     /** What has been credited so far, or null before anything arrived. */
     readonly receivedAmount: string | null;
@@ -66,7 +99,7 @@ export class Charge extends ApiResource {
     /** The refunds recorded against the charge; absent from webhooks. */
     readonly refunds: Refund[];
 
-    /** Fiat per one unit of the coin, locked when the charge was created. */
+    /** Fiat per one unit of the coin, locked when the charge was created, or when it was quoted again in another coin (see switchedFrom). */
     readonly exchangeRate: string;
 
     /** The address the customer pays into, or the payment hash of the Lightning invoice for BTC_LIGHTNING. */
@@ -129,6 +162,9 @@ export class Charge extends ApiResource {
     constructor(attributes: Attributes) {
         super(attributes);
 
+        const processingTerms = attributes['processing_terms'];
+        const switchedFrom = attributes['switched_from'];
+
         this.id = string(attributes, 'id', string(attributes, 'code'));
         this.status = string(attributes, 'status');
         this.paymentLink = reference(attributes, 'payment_link');
@@ -141,6 +177,16 @@ export class Charge extends ApiResource {
         this.asset = string(attributes, 'asset');
         this.assetAmount = string(attributes, 'asset_amount', '0');
         this.networkSurcharge = nullableString(attributes, 'network_surcharge');
+        this.processingTerms = isRecord(processingTerms) ? {
+            percent: string(processingTerms, 'percent', '0'),
+            maxForwardingPercent: int(processingTerms, 'max_forwarding_percent'),
+        } : null;
+        this.switchedFrom = isRecord(switchedFrom) ? {
+            asset: string(switchedFrom, 'asset'),
+            assetAmount: string(switchedFrom, 'asset_amount', '0'),
+            exchangeRate: string(switchedFrom, 'exchange_rate', '0'),
+            switchedAt: date(switchedFrom, 'switched_at'),
+        } : null;
         this.receivedAmount = nullableString(attributes, 'received_amount');
         this.remainingAmount = string(attributes, 'remaining_amount', '0');
         this.overpaid = bool(attributes, 'overpaid');

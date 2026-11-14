@@ -213,6 +213,10 @@ Passing a payment on costs the same whatever its size on some networks, so the c
 
 A charge in `Asset.BTC_LIGHTNING` is paid with a Lightning invoice rather than to an address. `charge.paymentRequest` is the invoice (BOLT11), which the checkout shows as a QR code, and `charge.depositAddress` is its payment hash; `paymentRequest` is `null` for every other coin. A Lightning invoice is for one exact amount, and is paid once.
 
+### Processing terms
+
+`charge.processingTerms` is the processing fee fixed when the charge was quoted: `percent`, such as `"1.75"`, of what it takes in, and `maxForwardingPercent`, such as `10`, the most passing a managed payment on to you may cost, in percent of your share; a payout that would cost more waits until it costs less. It is `null` for charges quoted before these terms existed and for VeliraPay's own billing.
+
 ## Short and late payments
 
 A charge that received less than it asked for is `underpaid`. A transfer that arrives after the charge expired or was canceled, or tops up an underpaid charge after its rate lock ended, is a late payment, announced with the `charge.late_payment` webhook; a top-up is announced once it has confirmed. Neither counts until you accept it, at the old rate, for what arrived:
@@ -230,6 +234,17 @@ await velirapay.charges.recordRefund('k3v9x2m7q8wz', {
 ```
 
 `accept()` throws a `ConflictError` while a payment to an underpaid charge is still confirming, and for a charge that is neither underpaid nor late. A late payment on top of a charge that is already paid is counted on its own. `recordRefund()` only records what you sent: the transfer itself is yours to make. An underpaid charge or a late payment has to be accepted before it can be refunded, or `recordRefund()` throws a `ValidationError` on `amount` saying so, and the network surcharge is never refundable.
+
+### Paid in the other coin
+
+TRX and USDT on Tron (`Asset.TRX`, `Asset.USDT_TRON`) are paid into the same deposit addresses, and customers mix them up. When a charge closes, expired or canceled, with nothing of its own coin while the other one arrived at its address, VeliraPay quotes it again in the coin that arrived, at the rate of the moment and with that coin's network surcharge. `asset`, `assetAmount`, `exchangeRate` and `networkSurcharge` then describe the new coin, `fiatAmount` stays the same, and `charge.switchedFrom` keeps the first quote:
+
+```js
+charge.asset;        // "USDT_TRON", the coin that arrived
+charge.switchedFrom; // { asset: "TRX", assetAmount: "36.633334", exchangeRate: "0.3", switchedAt: Date }, or null
+```
+
+The transfer is then a late payment like any other, announced with `charge.late_payment` for you to accept, after which `charge.paid` follows in the new coin. A charge switches at most once, and `switchedFrom` is `null` for every charge that never did. Read the coin from each charge and each delivery rather than the one you created the charge with.
 
 ## Invoices
 
@@ -464,13 +479,13 @@ Some things to know:
 - **Deliveries can arrive out of order.** When the order matters, fetch the current state, such as with `velirapay.charges.retrieve(event.charge.id)` once `event.charge` is not `null`, rather than trusting the payload.
 - **Test deliveries.** The dashboard's "Send test event" button and `webhookEndpoints.test()` send a sample `charge.paid` with `event.test` set to `true` and no `eventId`. Its charge is a made-up sample without many of a real one's fields, such as `transactions` and `customer`. An endpoint added in test mode receives the test-mode events, whose `event.mode` is `"test"`.
 
-`charge.payment_detected` arrives as soon as a transfer to a charge is seen, before it is confirmed: tell the customer, but do not fulfil. `charge.late_payment` arrives when a transfer reaches a charge that already expired, was canceled or was paid, or, once it has confirmed, when one tops up an underpaid charge after its rate lock ended. A late payment to an expired, canceled or underpaid charge waits for you to [accept it](#short-and-late-payments). Both events carry that transfer as `event.transaction`; for every other event it is `null`.
+`charge.payment_detected` arrives as soon as a transfer to a charge is seen, before it is confirmed: tell the customer, but do not fulfil. `charge.late_payment` arrives when a transfer reaches a charge that already expired, was canceled or was paid, or, once it has confirmed, when one tops up an underpaid charge after its rate lock ended. A late payment to an expired, canceled or underpaid charge waits for you to [accept it](#short-and-late-payments). Both events carry that transfer as `event.transaction`; for every other event it is `null`. A charge on Tron can also change coin once, from TRX to USDT or the other way round, when the customer [paid in the other coin](#paid-in-the-other-coin), so read `charge.asset` from each delivery rather than remembering the one the charge was created with.
 
 `payout.sent` arrives when your share of a paid charge has been broadcast, and `payout.confirmed` when the chain has confirmed it. Both carry the charge as `event.charge` and the payout as `event.payout`, the same object `payouts.retrieve()` answers with; for every other event it is `null`. Book the money on `payout.confirmed`: a broadcast payout can still be dropped and go out again, so `payout.sent` can arrive more than once for a charge.
 
 The charge and invoice in a delivery are not quite the ones the API answers with:
 
-- A charge's coin amounts and exchange rate carry all 18 decimal places (`"0.002500000000000000"` rather than `"0.0025"`). Compare amounts as numbers, not as strings.
+- A charge's coin amounts and exchange rate carry all 18 decimal places (`"0.002500000000000000"` rather than `"0.0025"`), and so do those of `charge.switchedFrom`. Compare amounts as numbers, not as strings.
 - A charge has no `timeline`, `refunds`, `checkoutUrl`, `receiptUrl`, `successUrl`, `cancelUrl` or `successMessage`. It names its payment link with its title and its invoice with its number: `charge.paymentLink` and `charge.invoice` hold the codes, and `charge.paymentLinkTitle` and `charge.invoiceNumber` the rest, which are `null` on the API's charges.
 - An invoice has no `overdue`, `documentUrl`, `successUrl` or `cancelUrl`; all four are `null`.
 - `charge.refunded` carries no refund. Read its amount, txid and reason from the event: `(await velirapay.events.retrieve(eventId)).details`.

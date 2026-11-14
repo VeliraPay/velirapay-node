@@ -1,0 +1,80 @@
+{
+    "id": "3e8b1d6c-5a2f-4c7e-b9d0-6f1a2b3c4d5e",
+    "event_id": "c4d5e6f7-8a9b-4c0d-9e1f-2a3b4c5d6e7f",
+    "event": "charge.late_payment",
+    "mode": "live",
+    "created_at": "2026-11-14T12:05:50.000000Z",
+    "data": {
+        "charge": {
+            "code": "t6r3e8w1q5yz",
+            "status": "expired",
+            "fiat_amount": "10.99",
+            "fiat_currency": "USD",
+            "asset": "USDT_TRON",
+            "asset_amount": "13.490000000000000000",
+            "network_surcharge": "2.500000000000000000",
+            "processing_terms": {
+                "percent": "1.75",
+                "max_forwarding_percent": 10
+            },
+            "switched_from": {
+                "asset": "TRX",
+                "asset_amount": "36.633334000000000000",
+                "exchange_rate": "0.300000000000000000",
+                "switched_at": "2026-11-14T12:05:49.000000Z"
+            },
+            "received_amount": null,
+            "remaining_amount": "13.490000000000000000",
+            "overpaid": false,
+            "refunded_amount": "0",
+            "exchange_rate": "1.000000000000000000",
+            "deposit_address": "TQ5NyGzLv6hBTpkuJDGrYJmbWakbqPHdLm",
+            "payment_request": null,
+            "transactions": [
+                {
+                    "txid": "4b2e9f7a1c6d3e8b5a0f9c2d7e4b1a6f3c8d5e2b9a7f4c1d6e3b8a5f2c9d7e4b",
+                    "amount": "13.490000000000000000",
+                    "confirmations": 19,
+                    "required_confirmations": 19,
+                    "credited": false,
+                    "explorer_url": "https://tronscan.org/#/transaction/4b2e9f7a1c6d3e8b5a0f9c2d7e4b1a6f3c8d5e2b9a7f4c1d6e3b8a5f2c9d7e4b",
+                    "seen_at": "2026-11-14T12:05:47.000000Z"
+                }
+            ],
+            "customer_email": "ada@example.com",
+            "customer_name": null,
+            "customer": {
+                "email": "ada@example.com",
+                "name": null,
+                "ip_address": "203.0.113.7",
+                "ip_country": "GB",
+                "ip_asn": 2856,
+                "ip_network": "British Telecommunications PLC",
+                "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15",
+                "reference": null,
+                "phone": null,
+                "country": null,
+                "metadata": []
+            },
+            "custom_fields": [],
+            "description": "Pro plan, 1 month",
+            "metadata": {
+                "order_id": "1043"
+            },
+            "payment_link": null,
+            "invoice": null,
+            "created_at": "2026-11-14T11:30:12.000000Z",
+            "expires_at": "2026-11-14T12:00:12.000000Z",
+            "paid_at": null
+        },
+        "transaction": {
+            "txid": "4b2e9f7a1c6d3e8b5a0f9c2d7e4b1a6f3c8d5e2b9a7f4c1d6e3b8a5f2c9d7e4b",
+            "amount": "13.490000000000000000",
+            "confirmations": 19,
+            "required_confirmations": 19,
+            "credited": false,
+            "explorer_url": "https://tronscan.org/#/transaction/4b2e9f7a1c6d3e8b5a0f9c2d7e4b1a6f3c8d5e2b9a7f4c1d6e3b8a5f2c9d7e4b",
+            "seen_at": "2026-11-14T12:05:47.000000Z"
+        }
+    }
+}

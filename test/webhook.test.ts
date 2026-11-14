@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { EventType, InvalidArgumentError, SignatureVerificationError, Webhook, WebhookEvent } from '../src/index.ts';
+import { Asset, EventType, InvalidArgumentError, SignatureVerificationError, Webhook, WebhookEvent } from '../src/index.ts';
 import { payload } from './support.ts';
 
 const SECRET = 'whsec_2b7Qf9LkXw3NcR8vT1mZ5pYs0HdJ4gUe6AoKiVbE';
@@ -92,6 +92,29 @@ test('a payment detected delivery carries the transfer that was seen', () => {
     assert.equal(transaction.credited, false);
     assert.ok(transaction.explorerUrl?.startsWith('https://mempool.space/tx/'));
     assert.deepEqual(transaction.seenAt, new Date('2026-09-20T09:58:12Z'));
+});
+
+test('a late payment to a charge quoted again in the coin that arrived carries its first quote, untrimmed', () => {
+    const event = signed('webhook_late_payment');
+
+    assert.equal(event.is(EventType.ChargeLatePayment), true);
+    assert.equal(event.transaction?.amount, '13.490000000000000000');
+
+    const charge = event.charge;
+    assert.ok(charge !== null);
+    assert.equal(charge.isExpired(), true);
+    assert.equal(charge.asset, Asset.USDT_TRON);
+    assert.equal(charge.assetAmount, '13.490000000000000000');
+    assert.equal(charge.networkSurcharge, '2.500000000000000000');
+    assert.equal(charge.exchangeRate, '1.000000000000000000');
+    assert.equal(charge.fiatAmount, '10.99');
+    assert.deepEqual(charge.processingTerms, { percent: '1.75', maxForwardingPercent: 10 });
+    assert.deepEqual(charge.switchedFrom, {
+        asset: Asset.TRX,
+        assetAmount: '36.633334000000000000',
+        exchangeRate: '0.300000000000000000',
+        switchedAt: new Date('2026-11-14T12:05:49Z'),
+    });
 });
 
 test('a payout delivery carries the charge and its payout', () => {

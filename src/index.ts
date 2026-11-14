@@ -49,7 +49,17 @@ export { Account, AccountBusiness, Address, type AccountCheckout, type AccountIn
 export { Activity } from './resources/activity.ts';
 export { ApiKey } from './resources/api-key.ts';
 export { ApiResource, type Attributes } from './resources/api-resource.ts';
-export { Charge, Customer, Refund, Transaction, type ApiCharge, type ChargeTimelineEntry, type CustomFieldAnswer } from './resources/charge.ts';
+export {
+    Charge,
+    Customer,
+    Refund,
+    Transaction,
+    type ApiCharge,
+    type ChargeTimelineEntry,
+    type CustomFieldAnswer,
+    type OriginalQuote,
+    type ProcessingTerms,
+} from './resources/charge.ts';
 export { Coupon } from './resources/coupon.ts';
 export { Event } from './resources/event.ts';
 export { Invoice, InvoiceItem, type InvoiceCharge } from './resources/invoice.ts';
