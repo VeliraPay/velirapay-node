@@ -15,8 +15,10 @@ test('an invoice is created', async () => {
             { description: 'Hosting', quantity: '2.5', unit_amount: '100.00' },
         ],
         due_at: '2026-10-15',
+        expires_at: new Date('2026-10-31T23:59:59Z'),
         success_url: 'https://example.com/orders/1042',
         cancel_url: 'https://example.com/checkout',
+        success_message: 'Thanks, Grace. Your hosting is renewed.',
         send_email: true,
     });
 
@@ -29,10 +31,22 @@ test('an invoice is created', async () => {
         { description: 'Hosting', quantity: '2.5', unit_amount: '100.00' },
     ]);
     assert.equal(sent['due_at'], '2026-10-15');
+    assert.equal(sent['expires_at'], '2026-10-31T23:59:59.000Z');
     assert.equal(sent['send_email'], true);
     assert.equal(sent['success_url'], 'https://example.com/orders/1042');
     assert.equal(sent['cancel_url'], 'https://example.com/checkout');
+    assert.equal(sent['success_message'], 'Thanks, Grace. Your hosting is renewed.');
     assert.equal(invoice.id, 'w7c2h5j9d3kx');
+});
+
+test('an invoice that names nobody is created for whoever has its link', async () => {
+    const http = new MockFetch().json({ data: { ...fixture('invoice'), customer_name: null, customer_email: null } }, 201);
+
+    const invoice = await client(http).invoices.create({ currency: 'USD', amount: '99.99', expires_at: '2026-12-31' });
+
+    assert.deepEqual(await body(http.lastRequest()), { currency: 'USD', amount: '99.99', expires_at: '2026-12-31' });
+    assert.equal(invoice.customerName, null);
+    assert.equal(invoice.customerEmail, null);
 });
 
 test("an invoice's total given as a number is sent as a decimal string", async () => {
@@ -62,10 +76,12 @@ test('an invoice is read into typed properties', async () => {
     assert.equal(invoice.items[1]?.unitAmount, '100.00');
     assert.equal(invoice.items[1]?.total, '250.00');
     assert.deepEqual(invoice.dueAt, new Date('2026-10-15T00:00:00Z'));
+    assert.deepEqual(invoice.expiresAt, new Date('2026-10-31T23:59:59Z'));
     assert.equal(invoice.hostedUrl, 'https://velirapay.com/i/w7c2h5j9d3kx');
     assert.equal(invoice.documentUrl, 'https://velirapay.com/i/w7c2h5j9d3kx/document');
     assert.equal(invoice.successUrl, 'https://example.com/orders/1042');
     assert.equal(invoice.cancelUrl, null);
+    assert.equal(invoice.successMessage, 'Thanks, Grace. Your hosting is renewed.');
     assert.deepEqual(invoice.charges, [{ id: 'm2q7w4e9r1ty', status: 'expired', asset: 'ETH' }]);
     assert.deepEqual(invoice.sentAt, new Date('2026-09-21T08:00:00Z'));
     assert.equal(invoice.paidAt, null);

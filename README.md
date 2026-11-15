@@ -83,7 +83,7 @@ const { VeliraPayClient } = require('velirapay');
 | When | Use | |
 | --- | --- | --- |
 | You are asking one customer for one payment | A [charge](#charges) | The default. It has one checkout page for that one payment, with the rate locked for 30 minutes. |
-| The customer should choose the coin, or pays later | An [invoice](#invoices) | It needs their name and email, has no timer, can be itemised and reminded, and lets them pick the coin on its page. |
+| The customer should choose the coin, or pays later | An [invoice](#invoices) | It can name the customer or be paid by whoever has its link, has no timer unless you give it one, can be itemised and reminded, and lets them pick the coin on its page. |
 | Many customers pay through the same public page | A [payment link](#payment-links), created once | A product sold again and again, a tip jar, a link on your site. |
 
 Do not create a new payment link for each customer or each order.
@@ -275,6 +275,26 @@ const hers = await velirapay.invoices.list({ search: 'grace@example.com' });
 ```
 
 Pass `amount` instead of `items` to bill a single total. The items may each cost less than the lowest price of the currency, as long as they add up to it.
+
+The customer's name and email are optional: without them, whoever has the invoice's link can pay it, and `invoice.customerName` and `invoice.customerEmail` are `null`. To let a buyer choose the coin on VeliraPay's page, create an invoice for each order with a thank-you message and a time after which it closes, and send the buyer to its `hostedUrl`:
+
+```js
+const order = await velirapay.invoices.create({
+    currency: 'USD',
+    items: [{ description: 'Premium, 1 year', quantity: '1', unit_amount: '99.99' }],
+    success_url: 'https://example.com/premium/welcome',
+    cancel_url: 'https://example.com/premium',
+    success_message: 'Payment received. Your Premium is active.',
+    expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000), // or a day, as YYYY-MM-DD, which ends at 23:59:59 UTC
+});
+
+order.expiresAt;      // a Date, or null for an invoice that stays open until it is paid or voided
+order.successMessage; // what the customer is told once they have paid, or null for your account's own message
+```
+
+Once `expires_at` has passed, the invoice takes no new payments, though one the customer already started can still be finished in its coin. An invoice still unpaid once nothing is under way is voided on its own, with `invoice.voided`. Fulfil the order on `invoice.paid`, or on `charge.paid`, whose `charge.invoice` names the invoice.
+
+An invoice can only be emailed with an address: `create()` with `send_email` but no `customer_email` throws a `ValidationError` on `customer_email` and creates nothing, and so does `send()` for an invoice that has none. `send()` throws a `ConflictError` once the invoice is no longer open or has expired.
 
 An invoice can be emailed once every 10 minutes. An account can send 100 emails to its customers an hour, or 10 until one of its owner's accounts has been paid in live mode: invoices, charges emailed to their customers and refund notices together, shared with the other accounts its owner owns. Past either limit, `send()` throws a `RateLimitError` whose `retryAfter()` says how many seconds to wait, and `create()` with `send_email` throws it and creates nothing. In test mode, invoices are only emailed to members of your account: anyone else is refused with a `ValidationError` on `customer_email`, by `send()` as by `create()` with `send_email`.
 
@@ -505,7 +525,7 @@ The charge and invoice in a delivery are not quite the ones the API answers with
 
 - A charge's coin amounts and exchange rate carry all 18 decimal places (`"0.002500000000000000"` rather than `"0.0025"`), and so do those of `charge.switchedFrom`. Compare amounts as numbers, not as strings.
 - A charge has no `timeline`, `refunds`, `checkoutUrl`, `receiptUrl`, `successUrl`, `cancelUrl` or `successMessage`. It names its payment link with its title and its invoice with its number: `charge.paymentLink` and `charge.invoice` hold the codes, and `charge.paymentLinkTitle` and `charge.invoiceNumber` the rest, which are `null` on the API's charges.
-- An invoice has no `overdue`, `documentUrl`, `successUrl` or `cancelUrl`; all four are `null`.
+- An invoice is the one the API answers with. Deliveries made before 2026-11-15 left out its `expiresAt`, `overdue`, `documentUrl`, `successUrl`, `cancelUrl` and `successMessage`, which are then `null`.
 - `charge.refunded` carries no refund. Read its amount, txid and reason from the event: `(await velirapay.events.retrieve(eventId)).details`.
 
 Fetch the object when you need what a delivery leaves out.
@@ -796,7 +816,7 @@ A failed request throws an error carrying the API's message. They are exported, 
 | `AuthenticationError` | The API key is missing, wrong or revoked (401). |
 | `PermissionError` | The API key may not do this (403): a restricted key without the permission the endpoint needs, such as `charges:write`, or a key used from an IP address it does not allow. The message names which. An owner or admin can change the key's permissions and addresses in the dashboard; the key itself stays the same. |
 | `NotFoundError` | The object does not exist, or belongs to the other mode (404). |
-| `ConflictError` | The object cannot make that change (409), such as canceling a charge once a transfer to it has been seen, accepting one that is neither underpaid nor late, or sending or voiding an invoice that is no longer open. Also when an idempotency key was used for a different request, or is held by a request still being processed, which is [retried](#retries-and-idempotency) for you. `wasReplayed()` is `true` when the key belongs to a request that succeeded but whose answer carried a new API key or signing secret, which cannot be shown again. |
+| `ConflictError` | The object cannot make that change (409), such as canceling a charge once a transfer to it has been seen, accepting one that is neither underpaid nor late, or sending or voiding an invoice that is no longer open, or sending one that has expired. Also when an idempotency key was used for a different request, or is held by a request still being processed, which is [retried](#retries-and-idempotency) for you. `wasReplayed()` is `true` when the key belongs to a request that succeeded but whose answer carried a new API key or signing secret, which cannot be shown again. |
 | `ValidationError` | The request has invalid fields (422). `errors()` lists them by field, and `firstError('amount')` gives the first message for one. |
 | `RateLimitError` | Too many requests (429), including a charge or invoice emailed again within 10 minutes, the hourly limit on emails to customers and the limit on new charges. `retryAfter()` says how many seconds to wait. |
 | `ServerError` | VeliraPay had a problem (5xx), such as no exchange rate being available to create a charge with (503). |

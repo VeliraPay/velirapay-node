@@ -172,11 +172,14 @@ test('a signed invoice delivery is parsed', () => {
     assert.ok(invoice !== null);
     assert.equal(invoice.id, 'w7c2h5j9d3kx');
     assert.equal(invoice.isPaid(), true);
-    assert.equal(invoice.overdue, null);
-    assert.equal(invoice.documentUrl, null);
-    assert.equal(invoice.successUrl, null);
+    assert.equal(invoice.overdue, false);
+    assert.equal(invoice.documentUrl, 'https://velirapay.com/i/w7c2h5j9d3kx/document');
+    assert.equal(invoice.successUrl, 'https://example.com/orders/1042');
+    assert.equal(invoice.cancelUrl, null);
+    assert.equal(invoice.successMessage, 'Thanks, Grace. Your hosting is renewed.');
     assert.deepEqual(invoice.charges.map((charge) => charge.id), ['m2q7w4e9r1ty', 'z8x6c4v2b0nm']);
     assert.deepEqual(invoice.dueAt, new Date('2026-10-15T00:00:00Z'));
+    assert.deepEqual(invoice.expiresAt, new Date('2026-10-31T23:59:59Z'));
 });
 
 test('signatures made by VeliraPay are accepted', () => {

@@ -112,8 +112,10 @@ export interface InvoiceItemParams {
 }
 
 export interface InvoiceCreateParams {
-    customer_name: string;
-    customer_email: string;
+    /** Who is billed; leave out for an invoice whoever has its link can pay. */
+    customer_name?: string | null;
+    /** Where the invoice and the receipt are emailed; required with send_email, and an invoice without one cannot be sent or reminded. */
+    customer_email?: string | null;
     currency: OrString<Currency>;
     /** A single total, instead of items. */
     amount?: Amount;
@@ -121,10 +123,14 @@ export interface InvoiceCreateParams {
     memo?: string | null;
     /** The day it is due, as YYYY-MM-DD. */
     due_at?: string | null;
+    /** When it stops taking new payments, in the future: a bare date ends at 23:59:59 UTC, and a timestamp is read in the offset it names. */
+    expires_at?: string | Date | null;
     /** A public https:// address the customer is offered a button back to once they have paid. */
     success_url?: string | null;
     /** A public https:// address the customer can go back to from the invoice without paying. */
     cancel_url?: string | null;
+    /** What the customer is told once they have paid, up to 1,000 characters; the account's own message when left out. */
+    success_message?: string | null;
     send_email?: boolean;
 }
 
