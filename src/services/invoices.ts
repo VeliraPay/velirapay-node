@@ -5,7 +5,7 @@ import { path, Service, withDecimalAmounts } from './service.ts';
 
 /** The /v1/invoices endpoints. */
 export class InvoiceService extends Service {
-    /** Create an invoice, for a total or a list of items, and optionally email it to the customer. */
+    /** Create an invoice for a customer named by name, email or both, for a total or a list of items, and optionally email it to them. */
     async create(params: InvoiceCreateParams, options?: RequestOptions): Promise<Invoice> {
         const body = withDecimalAmounts(params, 'amount');
 

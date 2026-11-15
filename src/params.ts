@@ -112,7 +112,7 @@ export interface InvoiceItemParams {
 }
 
 export interface InvoiceCreateParams {
-    /** Who is billed; leave out for an invoice whoever has its link can pay. */
+    /** Who is billed, such as the buyer's username on your site; required without customer_email, and the two may be given together. */
     customer_name?: string | null;
     /** Where the invoice and the receipt are emailed; required with send_email, and an invoice without one cannot be sent or reminded. */
     customer_email?: string | null;

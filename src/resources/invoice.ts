@@ -22,10 +22,10 @@ export class Invoice extends ApiResource {
     /** Whether the invoice is open past its due date; null in a payload that leaves it out. */
     readonly overdue: boolean | null;
 
-    /** The customer's name, or null when the invoice names nobody. */
+    /** The customer's name, or null when the invoice was given only their email. */
     readonly customerName: string | null;
 
-    /** The customer's email address, or null when it has none: it can then not be sent or reminded. */
+    /** The customer's email address, or null when the invoice was given only their name: it can then not be sent or reminded. */
     readonly customerEmail: string | null;
 
     /** A note shown on the invoice. */

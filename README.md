@@ -83,7 +83,7 @@ const { VeliraPayClient } = require('velirapay');
 | When | Use | |
 | --- | --- | --- |
 | You are asking one customer for one payment | A [charge](#charges) | The default. It has one checkout page for that one payment, with the rate locked for 30 minutes. |
-| The customer should choose the coin, or pays later | An [invoice](#invoices) | It can name the customer or be paid by whoever has its link, has no timer unless you give it one, can be itemised and reminded, and lets them pick the coin on its page. |
+| The customer should choose the coin, or pays later | An [invoice](#invoices) | It names the customer by name, email or both, has no timer unless you give it one, can be itemised, can be emailed and reminded when it has their email, and lets them pick the coin on its page. |
 | Many customers pay through the same public page | A [payment link](#payment-links), created once | A product sold again and again, a tip jar, a link on your site. |
 
 Do not create a new payment link for each customer or each order.
@@ -276,10 +276,11 @@ const hers = await velirapay.invoices.list({ search: 'grace@example.com' });
 
 Pass `amount` instead of `items` to bill a single total. The items may each cost less than the lowest price of the currency, as long as they add up to it.
 
-The customer's name and email are optional: without them, whoever has the invoice's link can pay it, and `invoice.customerName` and `invoice.customerEmail` are `null`. To let a buyer choose the coin on VeliraPay's page, create an invoice for each order with a thank-you message and a time after which it closes, and send the buyer to its `hostedUrl`:
+An invoice names its customer by `customer_name`, `customer_email` or both, and a name alone, such as the buyer's username on your site, is enough. Without either, `create()` throws a `ValidationError` on `customer_name` and creates nothing. `invoice.customerName` is `null` for an invoice given only an email, and `invoice.customerEmail` for one given only a name. To let a buyer choose the coin on VeliraPay's page, create an invoice for each order, addressed to the buyer by their username if you have no email for them, with a thank-you message and a time after which it closes, and send the buyer to its `hostedUrl`:
 
 ```js
 const order = await velirapay.invoices.create({
+    customer_name: 'buyer_1042', // their username on your site
     currency: 'USD',
     items: [{ description: 'Premium, 1 year', quantity: '1', unit_amount: '99.99' }],
     success_url: 'https://example.com/premium/welcome',

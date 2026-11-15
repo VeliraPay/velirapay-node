@@ -39,13 +39,13 @@ test('an invoice is created', async () => {
     assert.equal(invoice.id, 'w7c2h5j9d3kx');
 });
 
-test('an invoice that names nobody is created for whoever has its link', async () => {
-    const http = new MockFetch().json({ data: { ...fixture('invoice'), customer_name: null, customer_email: null } }, 201);
+test('an invoice that names its customer by a username alone is created without an email', async () => {
+    const http = new MockFetch().json({ data: { ...fixture('invoice'), customer_name: 'buyer_1042', customer_email: null } }, 201);
 
-    const invoice = await client(http).invoices.create({ currency: 'USD', amount: '99.99', expires_at: '2026-12-31' });
+    const invoice = await client(http).invoices.create({ customer_name: 'buyer_1042', currency: 'USD', amount: '99.99', expires_at: '2026-12-31' });
 
-    assert.deepEqual(await body(http.lastRequest()), { currency: 'USD', amount: '99.99', expires_at: '2026-12-31' });
-    assert.equal(invoice.customerName, null);
+    assert.deepEqual(await body(http.lastRequest()), { customer_name: 'buyer_1042', currency: 'USD', amount: '99.99', expires_at: '2026-12-31' });
+    assert.equal(invoice.customerName, 'buyer_1042');
     assert.equal(invoice.customerEmail, null);
 });
 
