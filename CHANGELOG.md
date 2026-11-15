@@ -2,6 +2,11 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## 0.2.5 - 2026-11-15
+
+- An invoice must name its customer: `invoices.create()` needs `customer_name`, `customer_email` or both, and a name alone, such as the buyer's username on your site, is enough. Without either, it throws a `ValidationError` on `customer_name` and creates nothing, so an invoice that names nobody, which 0.2.4 described, can no longer be created. The types do not change, since either may be left out: `invoice.customerName` is `null` for an invoice given only an email, and `invoice.customerEmail` for one given only a name. `customer_email` is still required with `send_email`, and an invoice without one still cannot be sent or reminded.
+- The README and doc comments now say so, and no longer describe an invoice that whoever has its link can pay.
+
 ## 0.2.4 - 2026-11-15
 
 - `invoices.create()` no longer needs `customer_name` or `customer_email`: an invoice that names nobody can be paid by whoever has its link. `customer_email` is still required with `send_email`: without it, `create()` throws a `ValidationError` on `customer_email` and creates nothing, and `invoices.send()` throws the same for an invoice that has none.
