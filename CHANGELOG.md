@@ -2,6 +2,14 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## 0.2.4 - 2026-11-15
+
+- `invoices.create()` no longer needs `customer_name` or `customer_email`: an invoice that names nobody can be paid by whoever has its link. `customer_email` is still required with `send_email`: without it, `create()` throws a `ValidationError` on `customer_email` and creates nothing, and `invoices.send()` throws the same for an invoice that has none.
+- `invoice.customerName` and `invoice.customerEmail` are typed `string | null`, and are `null` for an invoice that names nobody, where they would have read `''`. TypeScript code that hands either to something expecting a `string` needs a check first. Invoices created with both read exactly as before.
+- `invoices.create()` takes `expires_at`, a `Date` or a string, as payment links do: a bare date ends at 23:59:59 UTC, and a timestamp is read in the offset it names. Once it has passed, the invoice takes no new payments, though one the customer already started can still be finished, and an invoice still unpaid once nothing is under way is voided on its own, with `invoice.voided`. `invoice.expiresAt` reads it back, as a `Date` or `null`. `invoices.send()` throws a `ConflictError` once the invoice has expired.
+- `invoices.create()` takes `success_message`, up to 1,000 characters, what the customer is told once they have paid in place of the account's own message, and `invoice.successMessage` reads it back.
+- The invoice in `invoice.*` webhooks now carries `expiresAt`, `overdue`, `documentUrl`, `successUrl`, `cancelUrl` and `successMessage`, as the API's does. They are `null` in deliveries made before 2026-11-15, which left them out.
+
 ## 0.2.3 - 2026-11-14
 
 - `charge.switchedFrom`, typed `OriginalQuote`: a charge's first quote (`asset`, `assetAmount`, `exchangeRate` and `switchedAt`), once it was quoted again in another coin. TRX and USDT on Tron are paid into the same addresses, so when a charge closes, expired or canceled, with nothing of its own coin while the other one arrived, VeliraPay quotes it again in the coin that arrived: `asset`, `assetAmount`, `exchangeRate` and `networkSurcharge` then describe that coin, `fiatAmount` is unchanged, and the transfer is a late payment for you to accept. A charge switches at most once, so `asset` can change once: read the coin from each payload rather than remembering the one the charge was created with. It is `null` for every charge that never switched, and its amounts carry all 18 decimal places in webhooks, as the charge's do.
