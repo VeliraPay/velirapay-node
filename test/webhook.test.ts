@@ -42,6 +42,7 @@ test('a signed charge delivery is verified and parsed', () => {
     assert.equal(charge.customer.ipNetwork, 'Hetzner Online GmbH');
     assert.equal(charge.customer.email, 'ada@example.com');
     assert.deepEqual(charge.customer.metadata, {});
+    assert.deepEqual(charge.customFields, [{ label: 'Country', value: 'GB', type: 'country' }]);
     assert.deepEqual(charge.metadata, { order_id: '1042' });
     assert.deepEqual(charge.refunds, []);
     assert.equal(charge.checkoutUrl, null);

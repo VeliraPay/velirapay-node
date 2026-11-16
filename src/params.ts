@@ -17,6 +17,7 @@ import type {
     PaymentLinkStatus,
     PayoutStatus,
     PricingType,
+    QuestionType,
     WebhookDeliveryStatus,
 } from './enums.ts';
 
@@ -75,6 +76,7 @@ export interface ChargeCreateParams {
     coupon?: string | null;
     description?: string | null;
     metadata?: Metadata | null;
+    /** Up to ten labelled details shown with the charge, each value up to 2,000 characters. */
     custom_fields?: { label: string; value: string }[] | null;
     success_url?: string | null;
     cancel_url?: string | null;
@@ -140,6 +142,27 @@ export interface InvoiceListParams extends PageParams {
     overdue?: boolean;
 }
 
+/** A question a payment link's checkout asks. Only label is needed: a question without a type is short text, and every setting it leaves out is empty. */
+export interface CheckoutQuestionParams {
+    label: string;
+    type?: OrString<QuestionType>;
+    required?: boolean;
+    /** A hint shown in the empty field, for text, textarea, number, email and url. */
+    placeholder?: string | null;
+    /** A line shown under the field. */
+    help?: string | null;
+    /** The choices of a select question, in order. */
+    options?: string[] | null;
+    /** A string: for text and textarea the fewest characters, for number the lowest value, for date the earliest as YYYY-MM-DD. */
+    min?: string | null;
+    /** A string: for text and textarea the most characters, for number the highest value, for date the latest as YYYY-MM-DD. */
+    max?: string | null;
+    /** For text: a regular expression the whole answer has to match. */
+    pattern?: string | null;
+    /** The message shown when an answer does not match the pattern. */
+    pattern_hint?: string | null;
+}
+
 export interface PaymentLinkCreateParams {
     title: string;
     pricing_type: OrString<PricingType>;
@@ -157,7 +180,8 @@ export interface PaymentLinkCreateParams {
     collect_name?: boolean;
     require_email?: boolean;
     success_message?: string | null;
-    custom_fields?: { label: string; required: boolean }[];
+    /** Up to ten questions; on update, they replace every question the link asks. */
+    custom_fields?: CheckoutQuestionParams[];
     expires_at?: string | Date | null;
     max_payments?: number | null;
 }

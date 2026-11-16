@@ -1,4 +1,4 @@
-import { ChargeStatus, type Asset, type Currency, type OrString } from '../enums.ts';
+import { ChargeStatus, QuestionType, type Asset, type Currency, type OrString } from '../enums.ts';
 import { ApiResource, bool, date, int, isRecord, map, nullableInt, nullableString, objects, records, reference, string, type Attributes } from './api-resource.ts';
 
 /** One entry of a charge's history. */
@@ -10,7 +10,10 @@ export interface ChargeTimelineEntry {
 /** A labelled detail of a charge: an answer to a payment link's question, or one passed when creating the charge. */
 export interface CustomFieldAnswer {
     label: string;
+    /** Always a string: a ticked checkbox is "yes", a phone number E.164, a country its two-letter code. */
     value: string;
+    /** The question's QuestionType value; "text" for a detail passed when creating the charge or kept before types. */
+    type: OrString<QuestionType>;
 }
 
 /** The quote a charge was first created with, kept once it was quoted again in the other coin that arrived at its address. */
@@ -196,7 +199,7 @@ export class Charge extends ApiResource {
         this.customerEmail = nullableString(attributes, 'customer_email');
         this.customerName = nullableString(attributes, 'customer_name');
         this.customer = new Customer({ email: this.customerEmail, name: this.customerName, ...map(attributes, 'customer') });
-        this.customFields = records(attributes, 'custom_fields').map((field) => ({ label: string(field, 'label'), value: string(field, 'value') }));
+        this.customFields = records(attributes, 'custom_fields').map((field) => ({ label: string(field, 'label'), value: string(field, 'value'), type: string(field, 'type', QuestionType.Text) }));
         this.metadata = map(attributes, 'metadata');
         this.checkoutUrl = nullableString(attributes, 'checkout_url');
         this.receiptUrl = nullableString(attributes, 'receipt_url');

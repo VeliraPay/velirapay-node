@@ -1,10 +1,26 @@
-import { PaymentLinkStatus, PricingType, type Asset, type Currency, type OrString } from '../enums.ts';
+import { PaymentLinkStatus, PricingType, QuestionType, type Asset, type Currency, type OrString } from '../enums.ts';
 import { ApiResource, bool, date, int, nullableInt, nullableString, nullableStrings, records, string, strings, type Attributes } from './api-resource.ts';
 
-/** A question a payment link's checkout asks. */
+/** A question a payment link's checkout asks, with its settings: those its type does not use are null. */
 export interface CheckoutQuestion {
     label: string;
+    /** One of the QuestionType values; "text" for a link saved before types. */
+    type: OrString<QuestionType>;
     required: boolean;
+    /** A hint shown in the empty field, for text, textarea, number, email and url. */
+    placeholder: string | null;
+    /** A line shown under the field. */
+    help: string | null;
+    /** The choices of a select question, in order. */
+    options: string[] | null;
+    /** For text and textarea the fewest characters, for number the lowest value, for date the earliest as YYYY-MM-DD. */
+    min: string | null;
+    /** For text and textarea the most characters, for number the highest value, for date the latest as YYYY-MM-DD. */
+    max: string | null;
+    /** For text: a regular expression the whole answer has to match. */
+    pattern: string | null;
+    /** The message shown when an answer does not match the pattern. */
+    patternHint: string | null;
 }
 
 /** A shareable checkout page that creates a charge for each customer who pays through it. */
@@ -99,7 +115,18 @@ export class PaymentLink extends ApiResource {
         this.cancelUrl = nullableString(attributes, 'cancel_url');
         this.collectName = bool(attributes, 'collect_name');
         this.requireEmail = bool(attributes, 'require_email');
-        this.customFields = records(attributes, 'custom_fields').map((field) => ({ label: string(field, 'label'), required: bool(field, 'required') }));
+        this.customFields = records(attributes, 'custom_fields').map((field) => ({
+            label: string(field, 'label'),
+            type: string(field, 'type', QuestionType.Text),
+            required: bool(field, 'required'),
+            placeholder: nullableString(field, 'placeholder'),
+            help: nullableString(field, 'help'),
+            options: nullableStrings(field, 'options'),
+            min: nullableString(field, 'min'),
+            max: nullableString(field, 'max'),
+            pattern: nullableString(field, 'pattern'),
+            patternHint: nullableString(field, 'pattern_hint'),
+        }));
         this.successMessage = nullableString(attributes, 'success_message');
         this.expiresAt = date(attributes, 'expires_at');
         this.maxPayments = nullableInt(attributes, 'max_payments');

@@ -21,6 +21,7 @@ export {
     PayoutStatus,
     PlanName,
     PricingType,
+    QuestionType,
     WebhookDeliveryStatus,
     type AssignableMemberRole,
     type OrString,

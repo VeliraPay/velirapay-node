@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Asset, PaymentLink, PricingType } from '../src/index.ts';
+import { Asset, PaymentLink, PricingType, QuestionType } from '../src/index.ts';
 import { body, client, fixture, listResponse, MockFetch, pathOf, queryOf } from './support.ts';
 
 test('a payment link is created with its dates sent as ISO 8601', async () => {
@@ -44,6 +44,40 @@ test("a payment link's amounts given as numbers are sent as decimal strings", as
     assert.deepEqual(await body(http.lastRequest()), { pricing_type: 'fixed', amount: '150' });
 });
 
+test('typed questions are sent with their settings', async () => {
+    const http = new MockFetch().json({ data: fixture('payment_link') }, 201).json({ data: fixture('payment_link') });
+    const velirapay = client(http);
+
+    await velirapay.paymentLinks.create({
+        title: 'Tip jar',
+        pricing_type: PricingType.Open,
+        currency: 'USD',
+        custom_fields: [
+            { label: 'Plan', type: QuestionType.Select, required: true, options: ['Monthly', 'Yearly'] },
+            { label: 'Order number', type: 'text', pattern: 'ORD-[0-9]{6}', pattern_hint: 'Write it as ORD-123456.' },
+            { label: 'Message' },
+        ],
+    });
+
+    assert.deepEqual((await body(http.lastRequest()) as Record<string, unknown>)['custom_fields'], [
+        { label: 'Plan', type: 'select', required: true, options: ['Monthly', 'Yearly'] },
+        { label: 'Order number', type: 'text', pattern: 'ORD-[0-9]{6}', pattern_hint: 'Write it as ORD-123456.' },
+        { label: 'Message' },
+    ]);
+
+    await velirapay.paymentLinks.update('p4n8r2t6y1ua', { custom_fields: [{ label: 'Seats', type: QuestionType.Number, min: '1', max: '20' }] });
+
+    assert.deepEqual(await body(http.lastRequest()), { custom_fields: [{ label: 'Seats', type: 'number', min: '1', max: '20' }] });
+});
+
+test('a question saved before types reads as short text', async () => {
+    const http = new MockFetch().json({ data: { ...fixture('payment_link'), custom_fields: [{ label: 'Message', required: false }] } });
+
+    const link = await client(http).paymentLinks.retrieve('p4n8r2t6y1ua');
+
+    assert.deepEqual(link.customFields, [{ label: 'Message', type: 'text', required: false, placeholder: null, help: null, options: null, min: null, max: null, pattern: null, patternHint: null }]);
+});
+
 test('a payment link is read into typed properties', async () => {
     const http = new MockFetch().json({ data: fixture('payment_link') });
 
@@ -63,7 +97,10 @@ test('a payment link is read into typed properties', async () => {
     assert.equal(link.successUrl, 'https://example.com/thanks');
     assert.equal(link.collectName, true);
     assert.equal(link.requireEmail, false);
-    assert.deepEqual(link.customFields, [{ label: 'Message', required: false }]);
+    assert.deepEqual(link.customFields, [
+        { label: 'Message', type: 'textarea', required: false, placeholder: 'Say something nice', help: null, options: null, min: null, max: '500', pattern: null, patternHint: null },
+        { label: 'Plan', type: 'select', required: true, placeholder: null, help: 'You can change it later.', options: ['Monthly', 'Yearly'], min: null, max: null, pattern: null, patternHint: null },
+    ]);
     assert.equal(link.successMessage, 'Thank you!');
     assert.equal(link.expiresAt, null);
     assert.equal(link.maxPayments, 100);

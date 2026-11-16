@@ -118,7 +118,10 @@ test('a charge is read into typed properties', async () => {
     assert.equal(charge.customer.phone, '+44 20 7946 0958');
     assert.equal(charge.customer.country, 'GB');
     assert.deepEqual(charge.customer.metadata, { orders: 7, verified: true });
-    assert.deepEqual(charge.customFields, [{ label: 'Company', value: 'Analytical Engines Ltd' }]);
+    assert.deepEqual(charge.customFields, [
+        { label: 'Company', value: 'Analytical Engines Ltd', type: 'text' },
+        { label: 'Newsletter', value: 'yes', type: 'checkbox' },
+    ]);
     assert.deepEqual(charge.metadata, { order_id: '1042' });
     assert.equal(charge.checkoutUrl, 'https://velirapay.com/c/k3v9x2m7q8wz');
     assert.equal(charge.receiptUrl, 'https://velirapay.com/c/k3v9x2m7q8wz/receipt');

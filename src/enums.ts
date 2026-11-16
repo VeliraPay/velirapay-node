@@ -76,6 +76,22 @@ export const PricingType = Object.freeze({
 
 export type PricingType = (typeof PricingType)[keyof typeof PricingType];
 
+/** The kind of field a payment link's checkout question is shown as. */
+export const QuestionType = Object.freeze({
+    Text: 'text',
+    Textarea: 'textarea',
+    Number: 'number',
+    Email: 'email',
+    Phone: 'phone',
+    Url: 'url',
+    Date: 'date',
+    Select: 'select',
+    Checkbox: 'checkbox',
+    Country: 'country',
+} as const);
+
+export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType];
+
 /** The events a charge, an invoice or a payout reports, through webhooks and the events API. */
 export const EventType = Object.freeze({
     ChargeCreated: 'charge.created',
