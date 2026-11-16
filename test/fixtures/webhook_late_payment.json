@@ -29,7 +29,6 @@
             "refunded_amount": "0",
             "exchange_rate": "1.000000000000000000",
             "deposit_address": "TQ5NyGzLv6hBTpkuJDGrYJmbWakbqPHdLm",
-            "payment_request": null,
             "transactions": [
                 {
                     "txid": "4b2e9f7a1c6d3e8b5a0f9c2d7e4b1a6f3c8d5e2b9a7f4c1d6e3b8a5f2c9d7e4b",

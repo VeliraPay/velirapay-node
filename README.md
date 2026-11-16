@@ -209,10 +209,6 @@ The customer also comes back with what VeliraPay works out from the IP address, 
 
 Passing a payment on costs the same whatever its size on some networks, so the customer pays that part: a charge in USDT on Tron (`Asset.USDT_TRON`) asks for 2.50 USDT on top of the price. The coin says so before it is chosen, as `coin.networkSurcharge` from `assets.list()`, so tell the customer; the checkout does. A charge counts it in `assetAmount` and gives it again as `charge.networkSurcharge`, which is `null` for every coin without one. VeliraPay keeps it: it is not part of your payout, and a refund can never include it.
 
-### Bitcoin over Lightning
-
-A charge in `Asset.BTC_LIGHTNING` is paid with a Lightning invoice rather than to an address. `charge.paymentRequest` is the invoice (BOLT11), which the checkout shows as a QR code, and `charge.depositAddress` is its payment hash; `paymentRequest` is `null` for every other coin. A Lightning invoice is for one exact amount, and is paid once.
-
 ### Processing terms
 
 `charge.processingTerms` is the processing fee fixed when the charge was quoted: `percent`, such as `"1.75"`, of what it takes in, and `maxForwardingPercent`, such as `10`, the most passing a managed payment on to you may cost, in percent of your share; a payout that would cost more waits until it costs less. It is `null` for charges quoted before these terms existed and for VeliraPay's own billing.
@@ -394,7 +390,7 @@ for (const coin of await velirapay.payouts.summary()) {
 }
 ```
 
-On charges quoted under [processing terms](#processing-terms), your share pays the network costs of passing it on. Where the exact cost is not known when the payout is sent, as for ETH and the other EVM chains' own coins, TRX and Lightning routing, an estimate is set aside from your share first, and `payout.merchantNetworkReserve` says what became of it, in the payout's coin:
+On charges quoted under [processing terms](#processing-terms), your share pays the network costs of passing it on. Where the exact cost is not known when the payout is sent, as for ETH and the other EVM chains' own coins and TRX, an estimate is set aside from your share first, and `payout.merchantNetworkReserve` says what became of it, in the payout's coin:
 
 ```js
 payout.merchantNetworkReserve;
@@ -413,7 +409,7 @@ The residual stays owed to you: it is recorded, not sent back automatically. `me
 
 ### Payout addresses
 
-Payouts go to one address per network family, which the [`AddressNetwork`](#constants) values name: `bitcoin`, `litecoin`, `dogecoin`, `bitcoincash`, `evm` (Ethereum, for ETH, USDT and USDC there), `bsc` (BNB Chain), `base`, `arbitrum`, `polygon`, `tron`, `monero`, `solana` and `lightning`, whose address is a Lightning address such as `name@example.com`. BNB Chain, Base, Arbitrum One and Polygon each have their own, so nobody is paid on a chain they did not choose.
+Payouts go to one address per network family, which the [`AddressNetwork`](#constants) values name: `bitcoin`, `litecoin`, `dogecoin`, `bitcoincash`, `evm` (Ethereum, for ETH, USDT and USDC there), `bsc` (BNB Chain), `base`, `arbitrum`, `polygon`, `tron`, `monero` and `solana`. BNB Chain, Base, Arbitrum One and Polygon each have their own, so nobody is paid on a chain they did not choose.
 
 ```js
 import { AddressNetwork } from 'velirapay';
@@ -875,7 +871,7 @@ The values the API uses are in exported constants, each a frozen object with a t
 
 | Constant | Values |
 | --- | --- |
-| `Asset` | Every coin the API knows, on its network, such as `BTC`, `BTC_LIGHTNING`, `USDT` (on Ethereum), `USDT_TRON` and `USDC_BASE` |
+| `Asset` | Every coin the API knows, on its network, such as `BTC`, `USDT` (on Ethereum), `USDT_TRON` and `USDC_BASE` |
 | `ChargeStatus` | `pending`, `underpaid`, `paid`, `expired`, `canceled` |
 | `InvoiceStatus` | `open`, `paid`, `void` |
 | `PaymentLinkStatus` | `active`, `archived` |

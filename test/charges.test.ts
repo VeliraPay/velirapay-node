@@ -98,7 +98,6 @@ test('a charge is read into typed properties', async () => {
     assert.equal(charge.exchangeRate, '60000');
     assert.equal(charge.depositAddress, 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh');
     assert.equal(charge.networkSurcharge, null);
-    assert.equal(charge.paymentRequest, null);
     assert.equal(charge.transactions.length, 1);
     assert.equal(charge.transactions[0]?.confirmations, 3);
     assert.equal(charge.transactions[0]?.requiredConfirmations, 2);
@@ -144,13 +143,10 @@ test('the charges the API answers with are typed with their checkout page', asyn
     assert.equal(listed, 'https://velirapay.com/c/k3v9x2m7q8wz');
 });
 
-test('a charge with a network surcharge or a Lightning invoice says so', () => {
+test('a charge with a network surcharge says so', () => {
     const tron = new Charge({ ...fixture('charge'), asset: 'USDT_TRON', asset_amount: '52.50', network_surcharge: '2.50' });
-    const lightning = new Charge({ ...fixture('charge'), asset: 'BTC_LIGHTNING', payment_request: 'lnbc25u1p…', deposit_address: '9f86d081884c7d65' });
 
     assert.equal(tron.networkSurcharge, '2.50');
-    assert.equal(lightning.asset, Asset.BTC_LIGHTNING);
-    assert.equal(lightning.paymentRequest, 'lnbc25u1p…');
 });
 
 test('a charge quoted again in the coin that arrived keeps its first quote, beside its processing terms', async () => {

@@ -2,6 +2,10 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- Lightning is removed: `Asset.BTC_LIGHTNING`, `AddressNetwork.Lightning` (`'lightning'`) and `charge.paymentRequest` are gone, because VeliraPay no longer offers Bitcoin over Lightning. The API never returned them for anyone, since no account ever had Lightning switched on.
+
 ## 0.2.5 - 2026-11-15
 
 - An invoice must name its customer: `invoices.create()` needs `customer_name`, `customer_email` or both, and a name alone, such as the buyer's username on your site, is enough. Without either, it throws a `ValidationError` on `customer_name` and creates nothing, so an invoice that names nobody, which 0.2.4 described, can no longer be created. The types do not change, since either may be left out: `invoice.customerName` is `null` for an invoice given only an email, and `invoice.customerEmail` for one given only a name. `customer_email` is still required with `send_email`, and an invoice without one still cannot be sent or reminded.

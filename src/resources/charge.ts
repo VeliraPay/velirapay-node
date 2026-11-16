@@ -102,11 +102,8 @@ export class Charge extends ApiResource {
     /** Fiat per one unit of the coin, locked when the charge was created, or when it was quoted again in another coin (see switchedFrom). */
     readonly exchangeRate: string;
 
-    /** The address the customer pays into, or the payment hash of the Lightning invoice for BTC_LIGHTNING. */
+    /** The address the customer pays into. */
     readonly depositAddress: string;
-
-    /** The Lightning invoice (BOLT11) the customer pays, for BTC_LIGHTNING; null for every other coin. */
-    readonly paymentRequest: string | null;
 
     /** The transfers seen into the deposit address. */
     readonly transactions: Transaction[];
@@ -194,7 +191,6 @@ export class Charge extends ApiResource {
         this.refunds = objects(attributes, 'refunds', (refund) => new Refund(refund));
         this.exchangeRate = string(attributes, 'exchange_rate', '0');
         this.depositAddress = string(attributes, 'deposit_address');
-        this.paymentRequest = nullableString(attributes, 'payment_request');
         this.transactions = objects(attributes, 'transactions', (transaction) => new Transaction(transaction));
         this.timeline = records(attributes, 'timeline').map((entry) => ({ event: string(entry, 'event'), time: date(entry, 'time') }));
         this.customerEmail = nullableString(attributes, 'customer_email');

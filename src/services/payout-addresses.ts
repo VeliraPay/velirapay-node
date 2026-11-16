@@ -5,7 +5,7 @@ import { list, path, Service } from './service.ts';
 
 /**
  * The /v1/payout-addresses endpoints, one address per network family: bitcoin, litecoin, dogecoin, bitcoincash, evm (Ethereum),
- * bsc (BNB Chain), base, arbitrum, polygon, tron, monero, solana or lightning, as the AddressNetwork values name them.
+ * bsc (BNB Chain), base, arbitrum, polygon, tron, monero or solana, as the AddressNetwork values name them.
  * Reading needs payout_addresses:read; changing needs payout_addresses:write and an owner's switch under Payment settings.
  */
 export class PayoutAddressService extends Service {

@@ -4,7 +4,6 @@ export type OrString<T extends string> = T | (string & {});
 /** A coin on one particular network, such as USDT on Ethereum or USDT_TRON on Tron. The account lists the ones it accepts right now. */
 export const Asset = Object.freeze({
     BTC: 'BTC',
-    BTC_LIGHTNING: 'BTC_LIGHTNING',
     LTC: 'LTC',
     DOGE: 'DOGE',
     BCH: 'BCH',
@@ -216,7 +215,6 @@ export const AddressNetwork = Object.freeze({
     Tron: 'tron',
     Monero: 'monero',
     Solana: 'solana',
-    Lightning: 'lightning',
 } as const);
 
 export type AddressNetwork = (typeof AddressNetwork)[keyof typeof AddressNetwork];

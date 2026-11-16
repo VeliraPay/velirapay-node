@@ -59,7 +59,7 @@ export class Payout extends ApiResource {
 
     /**
      * What of the merchant's share was set aside for network costs, for a payout whose exact cost is not known when it is sent:
-     * ETH and the other EVM chains' own coins, TRX, and Lightning routing. Null for older charges, the Bitcoin family,
+     * ETH and the other EVM chains' own coins, and TRX. Null for older charges, the Bitcoin family,
      * USDT and USDC forwarders and payouts not sent yet.
      */
     readonly merchantNetworkReserve: NetworkReserve | null;

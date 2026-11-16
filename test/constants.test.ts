@@ -6,7 +6,7 @@ import { AccountType, ActivityAction, AddressNetwork, CheckoutAppearance, Checko
 test('the value sets the API uses have constants, in its order', () => {
     assert.deepEqual(Object.values(Currency), ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'TRY']);
     assert.deepEqual(Object.values(MemberRole), ['owner', 'admin', 'finance', 'support', 'viewer']);
-    assert.deepEqual(Object.values(AddressNetwork), ['bitcoin', 'litecoin', 'dogecoin', 'bitcoincash', 'evm', 'bsc', 'base', 'arbitrum', 'polygon', 'tron', 'monero', 'solana', 'lightning']);
+    assert.deepEqual(Object.values(AddressNetwork), ['bitcoin', 'litecoin', 'dogecoin', 'bitcoincash', 'evm', 'bsc', 'base', 'arbitrum', 'polygon', 'tron', 'monero', 'solana']);
     assert.deepEqual(Object.values(CheckoutAppearance), ['auto', 'light', 'dark']);
     assert.deepEqual(Object.values(WebhookDeliveryStatus), ['pending', 'succeeded', 'failed']);
     assert.deepEqual(Object.values(PlanName), ['free', 'pro']);
