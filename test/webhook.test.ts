@@ -12,6 +12,16 @@ function signed(name: string): WebhookEvent {
     return Webhook.constructEvent(raw, Webhook.signatureHeader(raw, SECRET), SECRET);
 }
 
+test('an answer delivered before types reads as short text', () => {
+    const delivery = JSON.parse(payload('webhook_charge')) as { data: { charge: { custom_fields: unknown[] } } };
+    delivery.data.charge.custom_fields = [{ label: 'Country', value: 'GB' }];
+    const raw = JSON.stringify(delivery);
+
+    const charge = Webhook.constructEvent(raw, Webhook.signatureHeader(raw, SECRET), SECRET).charge;
+
+    assert.deepEqual(charge?.customFields, [{ label: 'Country', value: 'GB', type: 'text' }]);
+});
+
 test('a signed charge delivery is verified and parsed', () => {
     const event = signed('webhook_charge');
 
