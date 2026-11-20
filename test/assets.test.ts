@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Asset, AssetPage, Currency, Mode, Page } from '../src/index.ts';
+import { Asset, AssetPage, Currency, Mode, Page, SupportedAsset } from '../src/index.ts';
 import { client, MockFetch, pathOf } from './support.ts';
 
 const assets = {
@@ -59,6 +59,11 @@ test('the coins on offer are read with their minimums', async () => {
     assert.equal(unknown?.accepted, null);
     assert.equal(unknown?.exchangeRate, null);
     assert.equal(unknown?.networkSurcharge, '2.50');
+});
+
+test('the Solana stablecoins have their own asset codes', () => {
+    assert.equal(new SupportedAsset({ id: 'USDT_SOLANA' }).asset(), Asset.USDT_SOLANA);
+    assert.equal(new SupportedAsset({ id: 'USDC_SOLANA' }).asset(), Asset.USDC_SOLANA);
 });
 
 test('the coins come with the mode and the currencies their prices can be asked in', async () => {

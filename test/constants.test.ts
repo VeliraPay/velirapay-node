@@ -13,9 +13,16 @@ test('the value sets the API uses have constants, in its order', () => {
     assert.deepEqual(Object.values(AccountType), ['personal', 'organization']);
     assert.deepEqual(Object.values(CheckoutLocale), ['en', 'fr', 'de', 'es', 'tr', 'pt', 'ru', 'ar']);
     assert.deepEqual(Object.values(QuestionType), ['text', 'textarea', 'number', 'email', 'phone', 'url', 'date', 'select', 'checkbox', 'country']);
-    assert.equal(Object.values(ActivityAction).length, 55);
+    assert.equal(Object.values(ActivityAction).length, 62);
     assert.equal(ActivityAction.SecondFactorRequirementChanged, 'team.second_factor_requirement_changed');
     assert.equal(ActivityAction.SocialAccountDisconnected, 'auth.social_disconnected');
+    assert.equal(ActivityAction.TeamCreated, 'team.created');
+    assert.equal(ActivityAction.TeamDeleted, 'team.deleted');
+    assert.equal(ActivityAction.AccountDeleted, 'auth.account_deleted');
+    assert.equal(ActivityAction.RecoveryCodesRegenerated, 'auth.recovery_codes_regenerated');
+    assert.equal(ActivityAction.RecoveryCodeUsed, 'auth.recovery_code_used');
+    assert.equal(ActivityAction.DataExported, 'data.exported');
+    assert.equal(ActivityAction.PersonalDataExported, 'auth.data_exported');
 });
 
 test('every constant is frozen', () => {

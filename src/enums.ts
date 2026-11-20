@@ -25,6 +25,8 @@ export const Asset = Object.freeze({
     ETH_BASE: 'ETH_BASE',
     ETH_ARBITRUM: 'ETH_ARBITRUM',
     POL: 'POL',
+    USDT_SOLANA: 'USDT_SOLANA',
+    USDC_SOLANA: 'USDC_SOLANA',
 } as const);
 
 export type Asset = (typeof Asset)[keyof typeof Asset];
@@ -340,6 +342,13 @@ export const ActivityAction = Object.freeze({
     SanctionsReturnRequested: 'sanctions.return_requested',
     SocialAccountConnected: 'auth.social_connected',
     SocialAccountDisconnected: 'auth.social_disconnected',
+    TeamCreated: 'team.created',
+    TeamDeleted: 'team.deleted',
+    AccountDeleted: 'auth.account_deleted',
+    RecoveryCodesRegenerated: 'auth.recovery_codes_regenerated',
+    RecoveryCodeUsed: 'auth.recovery_code_used',
+    DataExported: 'data.exported',
+    PersonalDataExported: 'auth.data_exported',
 } as const);
 
 export type ActivityAction = (typeof ActivityAction)[keyof typeof ActivityAction];

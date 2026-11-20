@@ -411,7 +411,7 @@ payout.merchantNetworkReserve;
 // }
 ```
 
-The residual stays owed to you: it is recorded, not sent back automatically. `merchantNetworkReserve` is `null` for older charges, the Bitcoin family, USDT and USDC, and payouts not sent yet.
+VeliraPay records the unused amount without an automatic transfer. The [settlement terms](https://velirapay.com/docs/settlement) for that payment determine whether it is owed to you. `merchantNetworkReserve` is `null` when the payout has no recorded reserve.
 
 ### Payout addresses
 
