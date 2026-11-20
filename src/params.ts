@@ -30,9 +30,9 @@ export type Metadata = Record<string, string | number | boolean | null>;
 /** Options for a request that changes something. */
 export interface RequestOptions {
     /**
-     * Up to 255 characters and not blank, such as "order-1042-attempt-1". For 24 hours, a repeat with the same key gets the first successful response
+     * Up to 255 bytes and not blank, preferably printable ASCII, such as "order-1042-attempt-1". For 24 hours, a repeat with the same key gets the first successful response
      * instead of being carried out again. Reuse a key only to retry the same request: a new attempt, such as a charge replacing one
-     * that expired, needs a new key, or it gets the old charge back, and a different body under the same key throws a ConflictError.
+     * that expired, needs a new key, or it gets the old charge back, and different serialized body bytes under the same key throw a ConflictError.
      * The answers that carry a new API key or webhook signing secret are the exception: they are never kept, so a repeat of
      * apiKeys.create(), webhookEndpoints.create() or rotateSecret() throws a ConflictError whose wasReplayed() is true, meaning the
      * first one succeeded.

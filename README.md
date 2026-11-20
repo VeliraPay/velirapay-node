@@ -463,7 +463,7 @@ Add an endpoint in the dashboard under **Developers → Webhooks**, or [with the
 
 ```js
 import express from 'express';
-import { EventType, SignatureVerificationError, Webhook } from 'velirapay';
+import { EventType, InvalidArgumentError, SignatureVerificationError, Webhook } from 'velirapay';
 
 const app = express();
 
@@ -473,7 +473,7 @@ app.post('/webhooks/velirapay', express.raw({ type: 'application/json' }), (req,
     try {
         event = Webhook.constructEvent(req.body, req.get(Webhook.SIGNATURE_HEADER), process.env.VELIRAPAY_WEBHOOK_SECRET);
     } catch (error) {
-        if (error instanceof SignatureVerificationError) {
+        if (error instanceof SignatureVerificationError || error instanceof InvalidArgumentError) {
             return res.sendStatus(400);
         }
 
@@ -482,7 +482,10 @@ app.post('/webhooks/velirapay', express.raw({ type: 'application/json' }), (req,
 
     // Sent when the endpoint is added or moved: it receives nothing else until it answers.
     if (event.isVerification()) {
-        return res.type('application/json').send(event.challengeResponse());
+        const challenge = event.challengeResponse();
+        return challenge === null
+            ? res.sendStatus(400)
+            : res.type('application/json').send(challenge);
     }
 
     // A sample from "Send test event", or a test-mode event: acknowledge it, and fulfil nothing for real.
@@ -502,9 +505,11 @@ app.post('/webhooks/velirapay', express.raw({ type: 'application/json' }), (req,
         }
     }
 
-    return res.sendStatus(200);
+    return res.status(503).send('Add durable event handling before accepting payments.');
 });
 ```
+
+The receiver answers challenges and skips dashboard samples and test-mode events. It returns 503 for live events until you check the expected charge, amount and currency and safely store the event with its deduplication key; only then replace that response with a 2xx. Use a separate test-order path when testing your integration.
 
 Where a framework hands you a Fetch API `Request`, as Next.js route handlers do, `await Webhook.constructEventFromRequest(request, secret)` reads the body and the header itself.
 
@@ -823,7 +828,7 @@ A failed request throws an error carrying the API's message. They are exported, 
 | `ValidationError` | The request has invalid fields (422). `errors()` lists them by field, and `firstError('amount')` gives the first message for one. |
 | `RateLimitError` | Too many requests (429), including a charge or invoice emailed again within 10 minutes, the hourly limit on emails to customers and the limit on new charges. `retryAfter()` says how many seconds to wait. |
 | `ServerError` | VeliraPay had a problem (5xx), such as no exchange rate being available to create a charge with (503). |
-| `InvalidRequestError` | Any other 4xx, such as an `Idempotency-Key` longer than 255 characters (400). |
+| `InvalidRequestError` | Any other 4xx, such as an `Idempotency-Key` longer than 255 bytes (400). |
 | `UnexpectedResponseError` | The API answered with something the library cannot read, such as a body that is not JSON. |
 | `ConnectionError` | The API could not be reached, after any retries. Its `cause` is the error the `fetch` threw. |
 | `SignatureVerificationError` | A webhook's signature is missing, does not match, or is too old. |
@@ -867,9 +872,9 @@ What the API does with a key:
 - Successful (2xx) answers are replayed for 24 hours to requests repeating the key. A request that failed stores nothing, so repeating it runs it again.
 - Reuse a key only to retry the same request. A new attempt needs a new key: a charge replacing one that expired, under the key of the first, would get the expired charge back for a day. Hence keys such as `order-1042-attempt-1`, not the bare order number.
 - An answer that carries a new API key or webhook signing secret is never stored. Repeating the key of `apiKeys.create()`, `webhookEndpoints.create()` or `rotateSecret()`, as the library's own retry does after a lost answer, throws a `ConflictError` whose `wasReplayed()` is `true`, which means the first request succeeded: see [webhook endpoints](#webhook-endpoints) and [API keys](#api-keys) for how to recover. It is the only conflict that is a replay.
-- Reusing a key with a different body or query string, such as another coin, throws a `ConflictError`.
+- Reusing a key with a different serialized JSON body or query string throws a `ConflictError`. Keep the body bytes unchanged, including property order and whitespace, even when the decoded values would be the same.
 - A request holds its key for up to 60 seconds while it is being processed. Another one with the same key gets a 409 with `Retry-After: 1` in that time, which the library waits out and retries.
-- A key covers one account, one mode, one HTTP method and one path, and every API key of that account and mode shares it, so two servers with different API keys still create one charge for one idempotency key. It is at most 255 characters, and cannot be blank.
+- A key covers one account, one mode, one HTTP method and one path, and every API key of that account and mode shares it, so two servers with different API keys still create one charge for one idempotency key. The API accepts at most 255 bytes; use printable ASCII for compatibility. Blank values or ones that cannot be sent as an HTTP header throw `InvalidArgumentError` before a request is sent.
 
 ## Constants
 
