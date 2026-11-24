@@ -509,7 +509,7 @@ app.post('/webhooks/velirapay', express.raw({ type: 'application/json' }), (req,
 });
 ```
 
-The receiver answers challenges and skips dashboard samples and test-mode events. It returns 503 for live events until you check the expected charge, amount and currency and safely store the event with its deduplication key; only then replace that response with a 2xx. Use a separate test-order path when testing your integration.
+The receiver answers challenges and skips dashboard samples and test-mode events. It returns 503 for live events until you check the expected charge, amount and currency and safely store the event with its deduplication key; only then replace that response with a 2xx. Before fulfilling, also make sure the charge is the one you saved for the order and that its `acceptedAt` is null: a short or late payment you accepted as paid in the dashboard, perhaps only to refund it, is yours to decide on. A delivery first made before 24 November 2026 has no such field, so read the charge from the API when it is missing. Use a separate test-order path when testing your integration.
 
 Where a framework hands you a Fetch API `Request`, as Next.js route handlers do, `await Webhook.constructEventFromRequest(request, secret)` reads the body and the header itself.
 
@@ -869,11 +869,11 @@ velirapay.lastResponse()?.wasReplayed(); // true when the API answered from an e
 
 What the API does with a key:
 
-- Successful (2xx) answers are replayed for 24 hours to requests repeating the key. A request that failed stores nothing, so repeating it runs it again.
+- Successful (2xx) answers are replayed for 24 hours to requests repeating the key. A request the API refused (4xx), or that failed before anything was saved, stores nothing, so repeating it runs it again. One that failed on the API's side after something was saved, or whose answer never came back, keeps its key: a repeat is answered with a conflict (409) that is not a replay, so read the object and send the request under a new key.
 - Reuse a key only to retry the same request. A new attempt needs a new key: a charge replacing one that expired, under the key of the first, would get the expired charge back for a day. Hence keys such as `order-1042-attempt-1`, not the bare order number.
-- An answer that carries a new API key or webhook signing secret is never stored. Repeating the key of `apiKeys.create()`, `webhookEndpoints.create()` or `rotateSecret()`, as the library's own retry does after a lost answer, throws a `ConflictError` whose `wasReplayed()` is `true`, which means the first request succeeded: see [webhook endpoints](#webhook-endpoints) and [API keys](#api-keys) for how to recover. It is the only conflict that is a replay.
+- An answer that carries a new API key or webhook signing secret is never stored. Repeating the key of `apiKeys.create()`, `webhookEndpoints.create()` or `rotateSecret()`, as the library's own retry does after a lost answer, throws a `ConflictError` whose `wasReplayed()` is `true`, which means the first request succeeded: see [webhook endpoints](#webhook-endpoints) and [API keys](#api-keys) for how to recover. A repeat of a successful change to a member or an API key is answered the same way, since who may make it is decided on every request; these are the only conflicts that are replays. A conflict whose body carries `code: "idempotency_outcome_unknown"` is neither a replay nor a request still in progress: the first request may or may not have been carried out, so read the object before sending the request under a new key.
 - Reusing a key with a different serialized JSON body or query string throws a `ConflictError`. Keep the body bytes unchanged, including property order and whitespace, even when the decoded values would be the same.
-- A request holds its key for up to 60 seconds while it is being processed. Another one with the same key gets a 409 with `Retry-After: 1` in that time, which the library waits out and retries.
+- A request holds its key for up to three minutes while it is being processed. Another one with the same key gets a 409 with `Retry-After: 1` in that time, which the library waits out and retries.
 - A key covers one account, one mode, one HTTP method and one path, and every API key of that account and mode shares it, so two servers with different API keys still create one charge for one idempotency key. The API accepts at most 255 bytes; use printable ASCII for compatibility. Blank values or ones that cannot be sent as an HTTP header throw `InvalidArgumentError` before a request is sent.
 
 ## Constants
