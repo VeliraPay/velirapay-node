@@ -82,7 +82,7 @@ test('an invoice is read into typed properties', async () => {
     assert.equal(invoice.successUrl, 'https://example.com/orders/1042');
     assert.equal(invoice.cancelUrl, null);
     assert.equal(invoice.successMessage, 'Thanks, Grace. Your hosting is renewed.');
-    assert.deepEqual(invoice.charges, [{ id: 'm2q7w4e9r1ty', status: 'expired', asset: 'ETH' }]);
+    assert.deepEqual(invoice.charges, [{ id: 'm2q7w4e9r1ty', status: 'expired', asset: 'ETH', paidAt: null, acceptedAt: null }]);
     assert.deepEqual(invoice.sentAt, new Date('2026-09-21T08:00:00Z'));
     assert.equal(invoice.paidAt, null);
 });

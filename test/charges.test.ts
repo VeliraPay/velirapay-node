@@ -127,6 +127,7 @@ test('a charge is read into typed properties', async () => {
     assert.equal(charge.receiptUrl, 'https://velirapay.com/c/k3v9x2m7q8wz/receipt');
     assert.deepEqual(charge.expiresAt, new Date('2026-09-20T10:25:00Z'));
     assert.deepEqual(charge.paidAt, new Date('2026-09-20T10:05:41Z'));
+    assert.equal(charge.acceptedAt, null);
     assert.deepEqual(charge.createdAt, new Date('2026-09-20T09:55:00Z'));
 });
 

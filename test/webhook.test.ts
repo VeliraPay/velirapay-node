@@ -189,6 +189,9 @@ test('a signed invoice delivery is parsed', () => {
     assert.equal(invoice.cancelUrl, null);
     assert.equal(invoice.successMessage, 'Thanks, Grace. Your hosting is renewed.');
     assert.deepEqual(invoice.charges.map((charge) => charge.id), ['m2q7w4e9r1ty', 'z8x6c4v2b0nm']);
+    assert.equal(invoice.charges[0]?.acceptedAt, null);
+    assert.deepEqual(invoice.charges[1]?.paidAt, new Date('2026-09-22T16:40:02Z'));
+    assert.deepEqual(invoice.charges[1]?.acceptedAt, new Date('2026-09-22T16:40:02Z'));
     assert.deepEqual(invoice.dueAt, new Date('2026-10-15T00:00:00Z'));
     assert.deepEqual(invoice.expiresAt, new Date('2026-10-31T23:59:59Z'));
 });

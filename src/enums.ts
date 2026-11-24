@@ -324,8 +324,10 @@ export const ActivityAction = Object.freeze({
     TwoFactorEnabled: 'auth.two_factor_enabled',
     TwoFactorDisabled: 'auth.two_factor_disabled',
     SignedOutElsewhere: 'auth.signed_out_elsewhere',
+    BrowserSignedOut: 'auth.browser_signed_out',
     TwoFactorFailed: 'auth.two_factor_failed',
     EmailChanged: 'auth.email_changed',
+    EmailChangeUndone: 'auth.email_change_undone',
     PasskeyAdded: 'auth.passkey_added',
     PasskeyRemoved: 'auth.passkey_removed',
     CouponCreated: 'coupon.created',
@@ -349,6 +351,8 @@ export const ActivityAction = Object.freeze({
     RecoveryCodeUsed: 'auth.recovery_code_used',
     DataExported: 'data.exported',
     PersonalDataExported: 'auth.data_exported',
+    ClaudeLinked: 'claude.linked',
+    ClaudeUnlinked: 'claude.unlinked',
 } as const);
 
 export type ActivityAction = (typeof ActivityAction)[keyof typeof ActivityAction];

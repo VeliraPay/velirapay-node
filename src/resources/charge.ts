@@ -141,6 +141,9 @@ export class Charge extends ApiResource {
     /** When the charge was paid. */
     readonly paidAt: Date | null;
 
+    /** When you accepted a short or late payment as paid, which is how the charge became paid; null for a charge the payment itself covered. */
+    readonly acceptedAt: Date | null;
+
     /** When the charge was created. */
     readonly createdAt: Date | null;
 
@@ -205,6 +208,7 @@ export class Charge extends ApiResource {
         this.receiptUrl = nullableString(attributes, 'receipt_url');
         this.expiresAt = date(attributes, 'expires_at');
         this.paidAt = date(attributes, 'paid_at');
+        this.acceptedAt = date(attributes, 'accepted_at');
         this.createdAt = date(attributes, 'created_at');
         this.coupon = nullableString(attributes, 'coupon');
         this.discountAmount = nullableString(attributes, 'discount_amount');

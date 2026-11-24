@@ -411,7 +411,7 @@ payout.merchantNetworkReserve;
 // }
 ```
 
-VeliraPay records the unused amount without an automatic transfer. The [settlement terms](https://velirapay.com/docs/settlement) for that payment determine whether it is owed to you. `merchantNetworkReserve` is `null` when the payout has no recorded reserve.
+It is not sent back: VeliraPay keeps it as part of the payout's network cost, as the [settlement terms](https://velirapay.com/docs/settlement) say. `merchantNetworkReserve` is `null` when the payout has no recorded reserve.
 
 ### Payout addresses
 

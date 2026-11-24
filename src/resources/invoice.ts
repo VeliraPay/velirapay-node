@@ -6,6 +6,10 @@ export interface InvoiceCharge {
     id: string;
     status: OrString<ChargeStatus>;
     asset: OrString<Asset>;
+    /** When the charge was paid. */
+    paidAt: Date | null;
+    /** When you accepted a short or late payment as paid, which is how the charge became paid; null for a charge the payment itself covered. */
+    acceptedAt: Date | null;
 }
 
 /** A bill, paid through a hosted page in the coin the customer chooses. */
@@ -100,6 +104,8 @@ export class Invoice extends ApiResource {
             id: string(charge, 'id', string(charge, 'code')),
             status: string(charge, 'status'),
             asset: string(charge, 'asset'),
+            paidAt: date(charge, 'paid_at'),
+            acceptedAt: date(charge, 'accepted_at'),
         }));
         this.sentAt = date(attributes, 'sent_at');
         this.viewedAt = date(attributes, 'viewed_at');

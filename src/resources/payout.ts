@@ -15,7 +15,7 @@ export interface NetworkReserve {
     sweepAvailable: string;
     /** What of the reserve is still held for the merchant, counted conservatively while costs are open. */
     held: string;
-    /** The unused amount once all costs are known, or null while costs are open. The payment's settlement terms determine who keeps it. */
+    /** The unused amount once all costs are known, or null while costs are open. It is not sent back: it is kept as part of the payout's network cost. */
     residual: string | null;
 }
 
