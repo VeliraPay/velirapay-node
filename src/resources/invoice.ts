@@ -41,6 +41,18 @@ export class Invoice extends ApiResource {
     /** The fiat currency, such as "USD". */
     readonly currency: OrString<Currency>;
 
+    /** What the items came to before the discount and tax, or null for an invoice whose items carry neither, whose amount is then their sum. */
+    readonly subtotal: string | null;
+
+    /** What the discount took off the items before tax, or null when there is none. */
+    readonly discount: string | null;
+
+    /** The percentage the discount took off, or null for a fixed discount or none. */
+    readonly discountPercent: string | null;
+
+    /** The tax added on top of the items at their tax rates, after the discount, or null for an invoice without a breakdown. */
+    readonly tax: string | null;
+
     /** The lines of an itemised invoice. */
     readonly items: InvoiceItem[];
 
@@ -95,6 +107,10 @@ export class Invoice extends ApiResource {
         this.memo = nullableString(attributes, 'memo');
         this.amount = string(attributes, 'amount', '0');
         this.currency = string(attributes, 'currency');
+        this.subtotal = nullableString(attributes, 'subtotal');
+        this.discount = nullableString(attributes, 'discount');
+        this.discountPercent = nullableString(attributes, 'discount_percent');
+        this.tax = nullableString(attributes, 'tax');
         this.items = objects(attributes, 'items', (item) => new InvoiceItem(item));
         this.dueAt = date(attributes, 'due_at');
         this.expiresAt = date(attributes, 'expires_at');
@@ -144,6 +160,9 @@ export class InvoiceItem extends ApiResource {
     /** The price of one unit, in the invoice's currency. */
     readonly unitAmount: string;
 
+    /** The tax rate on the line, in percent, such as "20.00", or null when it carries none. */
+    readonly taxRate: string | null;
+
     /** The quantity times the unit amount. */
     readonly total: string;
 
@@ -153,6 +172,7 @@ export class InvoiceItem extends ApiResource {
         this.description = string(attributes, 'description');
         this.quantity = string(attributes, 'quantity', '1');
         this.unitAmount = string(attributes, 'unit_amount', '0');
+        this.taxRate = nullableString(attributes, 'tax_rate');
         this.total = string(attributes, 'total', '0');
     }
 }

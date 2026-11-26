@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as velirapay from '../src/index.ts';
-import { AccountType, ActivityAction, AddressNetwork, CheckoutAppearance, CheckoutLocale, Currency, MemberRole, PlanName, QuestionType, WebhookDeliveryStatus } from '../src/index.ts';
+import { AccountType, ActivityAction, AddressNetwork, CheckoutAppearance, CheckoutLocale, Currency, MemberRole, PlanName, QuestionType, RefundRequestStatus, WebhookDeliveryStatus } from '../src/index.ts';
 
 test('the value sets the API uses have constants, in its order', () => {
     assert.deepEqual(Object.values(Currency), ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'TRY']);
@@ -13,7 +13,8 @@ test('the value sets the API uses have constants, in its order', () => {
     assert.deepEqual(Object.values(AccountType), ['personal', 'organization']);
     assert.deepEqual(Object.values(CheckoutLocale), ['en', 'fr', 'de', 'es', 'tr', 'pt', 'ru', 'ar']);
     assert.deepEqual(Object.values(QuestionType), ['text', 'textarea', 'number', 'email', 'phone', 'url', 'date', 'select', 'checkbox', 'country']);
-    assert.equal(Object.values(ActivityAction).length, 66);
+    assert.deepEqual(Object.values(RefundRequestStatus), ['awaiting_address', 'awaiting_transfer', 'confirming', 'refunded', 'canceled', 'expired']);
+    assert.equal(Object.values(ActivityAction).length, 70);
     assert.equal(ActivityAction.SecondFactorRequirementChanged, 'team.second_factor_requirement_changed');
     assert.equal(ActivityAction.SocialAccountDisconnected, 'auth.social_disconnected');
     assert.equal(ActivityAction.TeamCreated, 'team.created');
@@ -27,6 +28,10 @@ test('the value sets the API uses have constants, in its order', () => {
     assert.equal(ActivityAction.EmailChangeUndone, 'auth.email_change_undone');
     assert.equal(ActivityAction.ClaudeLinked, 'claude.linked');
     assert.equal(ActivityAction.ClaudeUnlinked, 'claude.unlinked');
+    assert.equal(ActivityAction.RefundRequested, 'refund.requested');
+    assert.equal(ActivityAction.RefundCanceled, 'refund.canceled');
+    assert.equal(ActivityAction.AccountingConnected, 'accounting.connected');
+    assert.equal(ActivityAction.AccountingDisconnected, 'accounting.disconnected');
 });
 
 test('every constant is frozen', () => {

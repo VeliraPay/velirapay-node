@@ -356,6 +356,18 @@ export class Refund extends ApiResource {
     /** When the refund was recorded. */
     readonly createdAt: Date | null;
 
+    /** The number of its credit note, such as "CN-0001", counted per account and mode; null in a payload that leaves it out. */
+    readonly number: string | null;
+
+    /** What the refund is worth in the charge's fiat currency, at the rate the charge was locked at; null in a payload that leaves it out. */
+    readonly fiatAmount: string | null;
+
+    /** The printable credit note, which the customer can open too; null in a payload that leaves it out. */
+    readonly creditNoteUrl: string | null;
+
+    /** When the chain showed the transfer landing at the customer's address, or null when the refund was recorded on the merchant's word. */
+    readonly confirmedOnChainAt: Date | null;
+
     constructor(attributes: Attributes) {
         super(attributes);
 
@@ -364,5 +376,9 @@ export class Refund extends ApiResource {
         this.reason = nullableString(attributes, 'reason');
         this.explorerUrl = nullableString(attributes, 'explorer_url');
         this.createdAt = date(attributes, 'created_at');
+        this.number = nullableString(attributes, 'number');
+        this.fiatAmount = nullableString(attributes, 'fiat_amount');
+        this.creditNoteUrl = nullableString(attributes, 'credit_note_url');
+        this.confirmedOnChainAt = date(attributes, 'confirmed_on_chain_at');
     }
 }

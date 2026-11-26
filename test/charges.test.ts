@@ -147,6 +147,30 @@ test('the charges the API answers with are typed with their checkout page', asyn
     assert.equal(listed, 'https://velirapay.com/c/k3v9x2m7q8wz');
 });
 
+test("a charge's refunds carry their credit note and whether the chain showed them landing", () => {
+    const refund = {
+        ...(fixture('charge')['refunds'] as Record<string, unknown>[])[0],
+        number: 'CN-0001',
+        fiat_amount: '30.00',
+        credit_note_url: 'https://velirapay.com/c/k3v9x2m7q8wz/credit-notes/CN-0001',
+        confirmed_on_chain_at: '2026-09-21T14:41:07.000000Z',
+    };
+    const recorded = new Charge({ ...fixture('charge'), refunds: [refund, { ...refund, number: 'CN-0002', confirmed_on_chain_at: null }] });
+    const older = new Charge(fixture('charge')).refunds[0];
+
+    assert.equal(recorded.refunds[0]?.number, 'CN-0001');
+    assert.equal(recorded.refunds[0]?.fiatAmount, '30.00');
+    assert.equal(recorded.refunds[0]?.creditNoteUrl, 'https://velirapay.com/c/k3v9x2m7q8wz/credit-notes/CN-0001');
+    assert.deepEqual(recorded.refunds[0]?.confirmedOnChainAt, new Date('2026-09-21T14:41:07Z'));
+    assert.equal(recorded.refunds[1]?.number, 'CN-0002');
+    assert.equal(recorded.refunds[1]?.confirmedOnChainAt, null);
+    assert.equal(older?.amount, '0.0005');
+    assert.equal(older?.number, null);
+    assert.equal(older?.fiatAmount, null);
+    assert.equal(older?.creditNoteUrl, null);
+    assert.equal(older?.confirmedOnChainAt, null);
+});
+
 test('a charge with a network surcharge says so', () => {
     const tron = new Charge({ ...fixture('charge'), asset: 'USDT_TRON', asset_amount: '52.50', network_surcharge: '2.50' });
 

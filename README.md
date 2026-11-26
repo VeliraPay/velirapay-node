@@ -242,6 +242,28 @@ charge.switchedFrom; // { asset: "TRX", assetAmount: "36.633334", exchangeRate: 
 
 The transfer is then a late payment like any other, announced with `charge.late_payment` for you to accept, after which `charge.paid` follows in the new coin. A charge switches at most once, and `switchedFrom` is `null` for every charge that never did. Read the coin from each charge and each delivery rather than the one you created the charge with.
 
+## Refunds
+
+A refund goes from your own wallet, since a payment forwarded to you cannot be pulled back. `startRefund()` sets its amount aside at once, so neither another refund request nor `recordRefund()` can take it twice, and asks the customer where to send it:
+
+```js
+const refundRequest = await velirapay.charges.startRefund('k3v9x2m7q8wz', { amount: '0.0005', reason: 'Returned order' });
+
+refundRequest.status;     // "awaiting_address"
+refundRequest.addressUrl; // the page the customer gives the address on, emailed to them when the charge has their email
+
+// Or give the address the customer already gave you, then send the refund and say which transaction carried it.
+await velirapay.charges.setRefundAddress('k3v9x2m7q8wz', refundRequest.id, { address: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq' });
+await velirapay.charges.markRefundSent('k3v9x2m7q8wz', refundRequest.id, { txid: '7d1c5e9a…' });
+
+const done = await velirapay.charges.retrieveRefundRequest('k3v9x2m7q8wz', refundRequest.id);
+done.refund?.creditNoteUrl; // once it is recorded as a refund
+```
+
+`startRefund()` also takes the `address` straight away. Once there is an address, VeliraPay watches it for a transfer of the charge's coin, between 2% under and 10% over the amount, or for the transaction `markRefundSent()` names, and records the refund at the coin's confirmations, which sends `charge.refunded` and emails the customer. `refundRequest.status` is one of the `RefundRequestStatus` values: `awaiting_address`, `awaiting_transfer`, `confirming`, `refunded`, `canceled` or `expired`, the first three still setting the amount aside (`isOpen()`). Watching is best effort, and a Monero transfer cannot be seen at all, so `completeRefund()` records the refund on your word, with its `txid` when there is one. `resendRefundLink()` emails the customer the link again, which then works for another two weeks, `cancelRefund()` frees what a refund set aside, and `refundRequests()` lists a charge's refund requests, newest first.
+
+A step the refund request is past, such as giving an address it already has, throws a `ConflictError`, and so does `resendRefundLink()` for a charge without a customer email. A `txid` that already stands for a payment, a payout or another refund throws a `ValidationError` on `txid`, and an amount above what is still refundable one on `amount`. Each of these needs `charges:refund`, reads included, and the six writes are limited to 10 a minute for each key, past which they throw a `RateLimitError`. Every refund, however it was recorded, has a credit note: each `Refund` in `charge.refunds`, and `refundRequest.refund` once there is one, carries its `number` (such as `CN-0001`), its `fiatAmount` at the charge's locked rate, its `creditNoteUrl` and its `confirmedOnChainAt`, which is `null` for a refund recorded on your word.
+
 ## Invoices
 
 An invoice is a bill with a hosted page, where the customer pays in the coin of their choice. Use it for a bill to pay later, or when the customer should choose the coin.
@@ -271,6 +293,22 @@ const hers = await velirapay.invoices.list({ search: 'grace@example.com' });
 ```
 
 Pass `amount` instead of `items` to bill a single total. The items may each cost less than the lowest price of the currency, as long as they add up to it.
+
+Each item can carry a `tax_rate` in percent, added on top of its price, and an invoice with items a discount taken off them before tax, either `discount_percent` or `discount_amount`. The total billed is then worked out from them, and `invoice.subtotal`, `discount`, `discountPercent` and `tax`, with each item's `taxRate`, give the breakdown, `null` for an invoice without one:
+
+```js
+const taxed = await velirapay.invoices.create({
+    customer_email: 'grace@example.com',
+    currency: 'EUR',
+    items: [{ description: 'Consulting', quantity: '10', unit_amount: '100.00', tax_rate: '20' }],
+    discount_percent: '10',
+});
+
+taxed.subtotal; // "1000.00"
+taxed.discount; // "100.00"
+taxed.tax;      // "180.00"
+taxed.amount;   // "1080.00", what the customer is charged
+```
 
 An invoice names its customer by `customer_name`, `customer_email` or both, and a name alone, such as the buyer's username on your site, is enough. Without either, `create()` throws a `ValidationError` on `customer_name` and creates nothing. `invoice.customerName` is `null` for an invoice given only an email, and `invoice.customerEmail` for one given only a name. To let a buyer choose the coin on VeliraPay's page, create an invoice for each order, addressed to the buyer by their username if you have no email for them, with a thank-you message and a time after which it closes, and send the buyer to its `hostedUrl`:
 
@@ -764,7 +802,7 @@ payment.started;     // false when a payment in that coin was already waiting, w
 
 | Property | Methods |
 | --- | --- |
-| `charges` | `create`, `retrieve`, `list`, `iterator`, `send`, `cancel`, `accept`, `recordRefund`, `simulate` |
+| `charges` | `create`, `retrieve`, `list`, `iterator`, `send`, `cancel`, `accept`, `recordRefund`, `simulate`, `refundRequests`, `retrieveRefundRequest`, `startRefund`, `setRefundAddress`, `markRefundSent`, `completeRefund`, `resendRefundLink`, `cancelRefund` |
 | `invoices` | `create`, `retrieve`, `list`, `iterator`, `send`, `void` |
 | `paymentLinks` | `create`, `retrieve`, `update`, `list`, `iterator`, `archive`, `restore` |
 | `coupons` | `create`, `retrieve`, `update`, `list`, `iterator`, `delete` |
@@ -885,6 +923,7 @@ The values the API uses are in exported constants, each a frozen object with a t
 | `Asset` | Every coin the API knows, on its network, such as `BTC`, `USDT` (on Ethereum), `USDT_TRON` and `USDC_BASE` |
 | `ChargeStatus` | `pending`, `underpaid`, `paid`, `expired`, `canceled` |
 | `InvoiceStatus` | `open`, `paid`, `void` |
+| `RefundRequestStatus` | `awaiting_address`, `awaiting_transfer`, `confirming`, `refunded`, `canceled`, `expired` |
 | `PaymentLinkStatus` | `active`, `archived` |
 | `PricingType` | `fixed`, `open` |
 | `PayoutStatus` | `pending`, `sending`, `sent`, `failed`, `manual` |

@@ -49,6 +49,78 @@ test('an invoice that names its customer by a username alone is created without 
     assert.equal(invoice.customerEmail, null);
 });
 
+test('an invoice is created with tax on its lines and a discount, numbers sent as decimal strings', async () => {
+    const http = new MockFetch().json({ data: fixture('invoice') }, 201).json({ data: fixture('invoice') }, 201);
+    const velirapay = client(http);
+
+    await velirapay.invoices.create({
+        customer_name: 'Grace Hopper',
+        currency: 'USD',
+        items: [
+            { description: 'Consulting', quantity: '10', unit_amount: '100.00', tax_rate: 20 },
+            { description: 'Hosting', quantity: '2.5', unit_amount: '100.00', tax_rate: '5.5' },
+            { description: 'Setup', quantity: '1', unit_amount: '50.00', tax_rate: null },
+        ],
+        discount_percent: 12.5,
+    });
+
+    assert.deepEqual(await body(http.lastRequest()), {
+        customer_name: 'Grace Hopper',
+        currency: 'USD',
+        items: [
+            { description: 'Consulting', quantity: '10', unit_amount: '100.00', tax_rate: '20' },
+            { description: 'Hosting', quantity: '2.5', unit_amount: '100.00', tax_rate: '5.5' },
+            { description: 'Setup', quantity: '1', unit_amount: '50.00', tax_rate: null },
+        ],
+        discount_percent: '12.5',
+    });
+
+    await velirapay.invoices.create({ customer_name: 'Grace Hopper', currency: 'USD', items: [{ description: 'Consulting', quantity: 10, unit_amount: '100.00' }], discount_amount: 0.1 + 0.2, discount_percent: null });
+
+    assert.deepEqual(await body(http.lastRequest()), {
+        customer_name: 'Grace Hopper',
+        currency: 'USD',
+        items: [{ description: 'Consulting', quantity: '10', unit_amount: '100.00' }],
+        discount_amount: '0.3',
+        discount_percent: null,
+    });
+});
+
+test("an invoice's subtotal, discount and tax are read, and are null for an invoice without them", async () => {
+    const http = new MockFetch().json({
+        data: {
+            ...fixture('invoice'),
+            amount: '1188.00',
+            subtotal: '1250.00',
+            discount: '125.00',
+            discount_percent: '10.00',
+            tax: '63.00',
+            items: [
+                { description: 'Consulting', quantity: '10', unit_amount: '100.00', tax_rate: '7.00', total: '1000.00' },
+                { description: 'Hosting', quantity: '2.5', unit_amount: '100.00', tax_rate: null, total: '250.00' },
+            ],
+        },
+    });
+
+    const invoice = await client(http).invoices.retrieve('w7c2h5j9d3kx');
+
+    assert.equal(invoice.amount, '1188.00');
+    assert.equal(invoice.subtotal, '1250.00');
+    assert.equal(invoice.discount, '125.00');
+    assert.equal(invoice.discountPercent, '10.00');
+    assert.equal(invoice.tax, '63.00');
+    assert.equal(invoice.items[0]?.taxRate, '7.00');
+    assert.equal(invoice.items[1]?.taxRate, null);
+
+    const plain = new Invoice(fixture('invoice'));
+
+    assert.equal(plain.subtotal, null);
+    assert.equal(plain.discount, null);
+    assert.equal(plain.discountPercent, null);
+    assert.equal(plain.tax, null);
+    assert.equal(plain.items[0]?.taxRate, null);
+});
+
 test("an invoice's total given as a number is sent as a decimal string", async () => {
     const http = new MockFetch().json({ data: fixture('invoice') }, 201);
 

@@ -196,6 +196,29 @@ test('a signed invoice delivery is parsed', () => {
     assert.deepEqual(invoice.expiresAt, new Date('2026-10-31T23:59:59Z'));
 });
 
+test("an invoice delivery carries the invoice's tax and discount, null in deliveries that leave them out", () => {
+    const delivery = JSON.parse(payload('webhook_invoice')) as { data: { invoice: Record<string, unknown> & { items: Record<string, unknown>[] } } };
+    const older = signed('webhook_invoice').invoice;
+    Object.assign(delivery.data.invoice, { amount: '1188.00', subtotal: '1250.00', discount: '125.00', discount_percent: '10.00', tax: '63.00' });
+    Object.assign(delivery.data.invoice.items[0] ?? {}, { tax_rate: '7.00' });
+    Object.assign(delivery.data.invoice.items[1] ?? {}, { tax_rate: null });
+    const raw = JSON.stringify(delivery);
+
+    const invoice = Webhook.constructEvent(raw, Webhook.signatureHeader(raw, SECRET), SECRET).invoice;
+
+    assert.equal(invoice?.subtotal, '1250.00');
+    assert.equal(invoice?.discount, '125.00');
+    assert.equal(invoice?.discountPercent, '10.00');
+    assert.equal(invoice?.tax, '63.00');
+    assert.equal(invoice?.items[0]?.taxRate, '7.00');
+    assert.equal(invoice?.items[1]?.taxRate, null);
+    assert.equal(older?.subtotal, null);
+    assert.equal(older?.discount, null);
+    assert.equal(older?.discountPercent, null);
+    assert.equal(older?.tax, null);
+    assert.equal(older?.items[0]?.taxRate, null);
+});
+
 test('signatures made by VeliraPay are accepted', () => {
     const raw = '{"id":"5f0c6f5e-8d1b-4a53-9a57-3c2b1d0e9f87","event_id":"9b1f7a3e-2c4d-4e8f-a6b0-1d2c3e4f5a6b","event":"charge.paid","mode":"live","created_at":"2026-09-20T10:05:42.000000Z","data":{"charge":{"code":"k3v9x2m7q8wz","status":"paid"}}}';
     const header = 't=1790000000,v1=a7a0dd3b10e4302cf840472806bb1c3a75453b7f8a6975c6475f92d58826df35';

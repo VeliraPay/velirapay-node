@@ -2,6 +2,14 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- Refund requests, the refunds the dashboard starts, through the API: `charges.startRefund()` sets part of a paid charge aside for a refund and, without an `address`, asks the customer for one, emailing them the link when the charge has their email; `setRefundAddress()` gives the address they gave you, `markRefundSent()` the hash of the transaction you sent the refund in, which the chain is looked at for straight away, `completeRefund()` records it on your word, with its `txid` when there is one, `resendRefundLink()` emails the link again and `cancelRefund()` frees what it set aside. `refundRequests()` lists a charge's refund requests, newest first, and `retrieveRefundRequest()` reads one. Each answers with a `RefundRequest`, whose `status` is one of the new `RefundRequestStatus` values (`awaiting_address`, `awaiting_transfer`, `confirming`, `refunded`, `canceled` or `expired`), with `addressUrl`, the page the customer gives the address on, the transfer the chain shows, and the `Refund` it was recorded as. Their params are typed as `RefundRequestCreateParams`, `RefundAddressParams`, `RefundSentParams` and `RefundCompleteParams`. All of them need `charges:refund`, reads included, and the six writes take an `idempotencyKey` as every write does. VeliraPay never sends the refund: you do, from your own wallet.
+- `Refund`, what `charge.refunds` and `refundRequest.refund` hold, gains `number`, its credit note's number such as `CN-0001`, `fiatAmount`, what it is worth in the charge's fiat currency at the locked rate, `creditNoteUrl`, the printable credit note, and `confirmedOnChainAt`, when the chain showed it landing, `null` for a refund recorded on your word. All four are `null` in a payload that leaves them out.
+- `invoices.create()` takes a `tax_rate` on each item, in percent, and a `discount_percent` or a `discount_amount` taken off the items before tax, numbers sent as decimal strings like every amount. The API ignored all three before 2026-11-26 and now bills the total they come to, so code that already passed them will create invoices for a different amount than before.
+- `invoice.subtotal`, `discount`, `discountPercent` and `tax`, and each item's `taxRate`, in the API's answers and in `invoice.*` webhooks alike: the breakdown of an invoice with tax or a discount, as decimal strings, and `null` for an invoice without one or in a payload that leaves them out.
+- Added the activity actions `refund.requested` and `refund.canceled`, and `accounting.connected` and `accounting.disconnected`, the last two among the sensitive ones.
+
 ## 0.2.8 - 2026-11-24
 
 - Added the activity actions `auth.browser_signed_out`, `auth.email_change_undone`, `claude.linked` and `claude.unlinked`, all four among the sensitive ones.

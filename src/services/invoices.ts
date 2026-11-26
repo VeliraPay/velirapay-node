@@ -5,12 +5,12 @@ import { path, Service, withDecimalAmounts } from './service.ts';
 
 /** The /v1/invoices endpoints. */
 export class InvoiceService extends Service {
-    /** Create an invoice for a customer named by name, email or both, for a total or a list of items, and optionally email it to them. */
+    /** Create an invoice for a customer named by name, email or both, for a total or a list of items, with tax on its lines and a discount if any, and optionally email it to them. */
     async create(params: InvoiceCreateParams, options?: RequestOptions): Promise<Invoice> {
-        const body = withDecimalAmounts(params, 'amount');
+        const body = withDecimalAmounts(params, 'amount', 'discount_percent', 'discount_amount');
 
         if (Array.isArray(params.items)) {
-            body.items = params.items.map((item) => withDecimalAmounts(item, 'quantity', 'unit_amount'));
+            body.items = params.items.map((item) => withDecimalAmounts(item, 'quantity', 'unit_amount', 'tax_rate'));
         }
 
         return new Invoice(await this.request('POST', '/v1/invoices', body, options));

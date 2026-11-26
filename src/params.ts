@@ -107,10 +107,35 @@ export interface SimulateParams {
     amount?: Amount | null;
 }
 
+export interface RefundRequestCreateParams {
+    /** In the charge's coin, at most what is still refundable: what was counted towards the charge, less its network surcharge, earlier refunds and what other open refund requests set aside. */
+    amount: Amount;
+    reason?: string | null;
+    /** Where the refund goes, when the customer already gave you an address on the charge's network; left out, the customer is asked for one. */
+    address?: string | null;
+}
+
+export interface RefundAddressParams {
+    /** The address the customer gave you, on the charge's network and mode. */
+    address: string;
+}
+
+export interface RefundSentParams {
+    /** The hash of the transaction you sent the refund in. */
+    txid: string;
+}
+
+export interface RefundCompleteParams {
+    /** The hash of the transaction that carried the refund, when there is one. */
+    txid?: string | null;
+}
+
 export interface InvoiceItemParams {
     description: string;
     quantity: Amount;
     unit_amount: Amount;
+    /** Tax on the line, in percent from 0 to 100 with at most 2 decimals, added on top of its price after any discount. */
+    tax_rate?: Amount | null;
 }
 
 export interface InvoiceCreateParams {
@@ -122,6 +147,10 @@ export interface InvoiceCreateParams {
     /** A single total, instead of items. */
     amount?: Amount;
     items?: InvoiceItemParams[];
+    /** A percentage taken off the items before tax, above 0 and below 100; only with items, and not with discount_amount. */
+    discount_percent?: Amount | null;
+    /** A fixed amount taken off the items before tax, in the invoice's currency and less than they come to; only with items, and not with discount_percent. */
+    discount_amount?: Amount | null;
     memo?: string | null;
     /** The day it is due, as YYYY-MM-DD. */
     due_at?: string | null;

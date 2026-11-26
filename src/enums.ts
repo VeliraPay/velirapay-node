@@ -51,6 +51,18 @@ export const InvoiceStatus = Object.freeze({
 
 export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
 
+/** The states a refund request moves through: the first three still set its amount aside on the charge. */
+export const RefundRequestStatus = Object.freeze({
+    AwaitingAddress: 'awaiting_address',
+    AwaitingTransfer: 'awaiting_transfer',
+    Confirming: 'confirming',
+    Refunded: 'refunded',
+    Canceled: 'canceled',
+    Expired: 'expired',
+} as const);
+
+export type RefundRequestStatus = (typeof RefundRequestStatus)[keyof typeof RefundRequestStatus];
+
 /** Where a payout has got to. */
 export const PayoutStatus = Object.freeze({
     Pending: 'pending',
@@ -314,6 +326,8 @@ export const ActivityAction = Object.freeze({
     ChargeCanceled: 'charge.canceled',
     ChargeAccepted: 'charge.accepted',
     RefundRecorded: 'refund.recorded',
+    RefundRequested: 'refund.requested',
+    RefundCanceled: 'refund.canceled',
     InvoiceVoided: 'invoice.voided',
     PlanPaymentStarted: 'plan.payment_started',
     SubscriptionCanceled: 'plan.subscription_canceled',
@@ -353,6 +367,8 @@ export const ActivityAction = Object.freeze({
     PersonalDataExported: 'auth.data_exported',
     ClaudeLinked: 'claude.linked',
     ClaudeUnlinked: 'claude.unlinked',
+    AccountingConnected: 'accounting.connected',
+    AccountingDisconnected: 'accounting.disconnected',
 } as const);
 
 export type ActivityAction = (typeof ActivityAction)[keyof typeof ActivityAction];

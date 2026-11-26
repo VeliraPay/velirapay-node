@@ -22,6 +22,7 @@ export {
     PlanName,
     PricingType,
     QuestionType,
+    RefundRequestStatus,
     WebhookDeliveryStatus,
     type AssignableMemberRole,
     type OrString,
@@ -81,6 +82,7 @@ export {
 export { PaymentLink, type CheckoutQuestion } from './resources/payment-link.ts';
 export { Payout, PayoutAddress, PayoutSummary, type NetworkReserve } from './resources/payout.ts';
 export { ProPayment } from './resources/pro-payment.ts';
+export { RefundRequest } from './resources/refund-request.ts';
 export { SupportedAsset } from './resources/supported-asset.ts';
 export { WebhookDelivery, WebhookDeliveryAttempt, WebhookEndpoint } from './resources/webhook-endpoint.ts';
 export { AccountService } from './services/account.ts';
