@@ -2,6 +2,10 @@
 
 All notable changes to this library are documented here. It follows [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- The README says to give an ID of more than 15 digits in `metadata` as a string, since JavaScript rounds a JSON number above `Number.MAX_SAFE_INTEGER`.
+
 ## 0.2.9 - 2026-11-26
 
 - Refund requests, the refunds the dashboard starts, through the API: `charges.startRefund()` sets part of a paid charge aside for a refund and, without an `address`, asks the customer for one, emailing them the link when the charge has their email; `setRefundAddress()` gives the address they gave you, `markRefundSent()` the hash of the transaction you sent the refund in, which the chain is looked at for straight away, `completeRefund()` records it on your word, with its `txid` when there is one, `resendRefundLink()` emails the link again and `cancelRefund()` frees what it set aside. `refundRequests()` lists a charge's refund requests, newest first, and `retrieveRefundRequest()` reads one. Each answers with a `RefundRequest`, whose `status` is one of the new `RefundRequestStatus` values (`awaiting_address`, `awaiting_transfer`, `confirming`, `refunded`, `canceled` or `expired`), with `addressUrl`, the page the customer gives the address on, the transfer the chain shows, and the `Refund` it was recorded as. Their params are typed as `RefundRequestCreateParams`, `RefundAddressParams`, `RefundSentParams` and `RefundCompleteParams`. All of them need `charges:refund`, reads included, and the six writes take an `idempotencyKey` as every write does. VeliraPay never sends the refund: you do, from your own wallet.

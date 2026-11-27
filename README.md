@@ -170,7 +170,7 @@ await velirapay.charges.cancel('k3v9x2m7q8wz');
 
 `send()` needs a customer email and only works while the charge is pending, or it throws a `ConflictError`. Creating a charge with `send_email` but no customer email throws a `ValidationError` on `customer_email` and creates nothing. A charge can be emailed once every 10 minutes, and the emails count towards the hourly limit under [Invoices](#invoices). In test mode, charge emails only go to members of your account.
 
-`metadata` holds up to 20 keys of at most 40 characters each. Values are strings, numbers, booleans or `null`, and a string is at most 500 characters.
+`metadata` holds up to 20 keys of at most 40 characters each. Values are strings, numbers, booleans or `null`, and a string is at most 500 characters. Give an ID of more than 15 digits as a string: JavaScript reads a JSON number above `Number.MAX_SAFE_INTEGER` (9007199254740991) rounded, so `9007199254740993` comes back as `9007199254740992` from the API and in a webhook. The signature is checked against the raw body, so it is not affected.
 
 The accounts one person owns can open 300 charges between them in each mode within 30 minutes, through the API, the MCP server and the dashboard together, and 30 until one of them has been paid in live mode. Canceled charges count, paid live ones do not, and the payments customers start on the hosted checkout are not counted. Past that, `create()` throws a `RateLimitError` whose `retryAfter()` says how many seconds to wait.
 
