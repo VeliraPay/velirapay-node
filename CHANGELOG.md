@@ -4,6 +4,7 @@ All notable changes to this library are documented here. It follows [Semantic Ve
 
 ## Unreleased
 
+- `RefundRequest` gains `detectedTxid`, the transfer the chain shows at the customer's address. A refund request no longer records a transfer it found by its amount alone, since others may pay that address too: while `txid` is null, `detectedTxid` names one that fits and the status stays `awaiting_transfer` until you give it to `markRefundSent()`. `txid` is now only the hash you gave.
 - The README says to give an ID of more than 15 digits in `metadata` as a string, since JavaScript rounds a JSON number above `Number.MAX_SAFE_INTEGER`.
 
 ## 0.2.9 - 2026-11-26

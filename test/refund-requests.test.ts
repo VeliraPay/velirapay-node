@@ -12,6 +12,7 @@ function awaitingAddress(): Record<string, unknown> {
         address_given_by: null,
         address_url: 'https://velirapay.com/r/r5t8y2u6i9op?expires=1791297000&signature=0f3c',
         txid: null,
+        detected_txid: null,
         detected_amount: null,
         confirmations: null,
         refund: null,
@@ -57,6 +58,7 @@ test('a refund request is read into typed properties', async () => {
     assert.deepEqual(refundRequest.linkExpiresAt, new Date('2026-10-05T14:30:00Z'));
     assert.deepEqual(refundRequest.emailedAt, new Date('2026-09-21T14:30:02Z'));
     assert.equal(refundRequest.txid, 'e4b2a1c3d5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90');
+    assert.equal(refundRequest.detectedTxid, refundRequest.txid);
     assert.equal(refundRequest.detectedAmount, '0.0005');
     assert.equal(refundRequest.confirmations, 3);
     assert.deepEqual(refundRequest.createdAt, new Date('2026-09-21T14:30:00Z'));
@@ -82,6 +84,7 @@ test('a refund request waiting for the address has no refund, transfer or confir
     assert.equal(refundRequest.addressGivenBy, null);
     assert.equal(refundRequest.addressUrl, 'https://velirapay.com/r/r5t8y2u6i9op?expires=1791297000&signature=0f3c');
     assert.equal(refundRequest.txid, null);
+    assert.equal(refundRequest.detectedTxid, null);
     assert.equal(refundRequest.detectedAmount, null);
     assert.equal(refundRequest.confirmations, null);
     assert.equal(refundRequest.refund, null);

@@ -37,10 +37,13 @@ export class RefundRequest extends ApiResource {
     /** When the link was last emailed to the customer, or null when it never was. */
     readonly emailedAt: Date | null;
 
-    /** The transaction you said carried the refund, or the one the chain showed. */
+    /** The transaction you said carried the refund. */
     readonly txid: string | null;
 
-    /** What the chain shows arriving at the address for the refund, in the charge's coin. */
+    /** The transfer the chain shows at the address: the one with your hash, or, while txid is null, one that fits the refund and waits for you to give it to markRefundSent(). */
+    readonly detectedTxid: string | null;
+
+    /** What that transfer carried, in the charge's coin. */
     readonly detectedAmount: string | null;
 
     /** How many confirmations that transfer has, or null before one is seen. */
@@ -72,6 +75,7 @@ export class RefundRequest extends ApiResource {
         this.linkExpiresAt = date(attributes, 'link_expires_at');
         this.emailedAt = date(attributes, 'emailed_at');
         this.txid = nullableString(attributes, 'txid');
+        this.detectedTxid = nullableString(attributes, 'detected_txid');
         this.detectedAmount = nullableString(attributes, 'detected_amount');
         this.confirmations = nullableInt(attributes, 'confirmations');
         this.refund = object(attributes, 'refund', (refund) => new Refund(refund));
